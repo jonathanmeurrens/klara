@@ -26,9 +26,6 @@ function getProgramma(){
 
 function getPlaylist(){
     //echo file_get_contents('http://services.vrt.be/epg/playlists/current/31?accept=application%2Fvnd.epg.vrt.be.playlist_1.1%2Bjson');
-    echo file_get_contents('http://services.vrt.be/epg/playlists/search?channel_code=31&artist=&title=&composer=&starttime='.date('Ymd').'0000&endtime=201401152359&accept=application%2Fvnd.epg.vrt.be.songs_1.1%2Bjson');
+    echo file_get_contents('http://services.vrt.be/epg/playlists/search?channel_code=31&artist=&title=&composer=&starttime='.date('Ymd').'0000&endtime='.date('Ymd').'2359&accept=application%2Fvnd.epg.vrt.be.songs_1.1%2Bjson');
     exit();
 }
-
-
-http://services.vrt.be/epg/playlists/search?channel_code=31&artist=&title=&composer=&starttime=201401140000&endtime=201401152359&accept=application%2Fvnd.epg.vrt.be.songs_1.1%2Bjson&f=mySearch.parseResults
