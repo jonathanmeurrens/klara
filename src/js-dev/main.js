@@ -7,11 +7,7 @@
  */
 
 /* globals App:true */
+
 var app = new App($("#container"));
 //app.init();
 
-
-/*$.getJSON("http://services.vrt.be/playlist/onair?channel_code=31&accept=application%2Fvnd.playlist.vrt.be.noa_1.0%2Bjson&callback=?")
-    .done(function(data){
-        console.log(data);
-    });*/

@@ -7,61 +7,23 @@
  */
 
 /* globals Util:true */
+/* globals $jit:true */
+/* globals AppModel:true */
+/* globals MyMap:true */
+
+var appModel;
 
 var App = (function(){
 
     function App($sourceElement){
         _.bindAll(this); // this altijd slaat op deze klasse
-        this.$sourceElement = $sourceElement;
+        /*this.$sourceElement = $sourceElement;*/
 
-        $.getJSON(Util.api + '/programma')
-         .done(function(data){
-            console.log(data);
-         });
+        appModel = new AppModel();
+        appModel.getPlaylist();
 
-        $.getJSON(Util.api + '/nummer')
-            .done(function(data){
-                console.log(data);
-            });
-
-        $.getJSON(Util.api + '/playlist')
-            .done(function(data){
-                console.log(data);
-            });
+        this.map = new MyMap();
     }
-
-   /* Main.prototype.init = function(){
-        polls = new Polls(this.$sourceElement);
-        bean.on(polls,"get_poll", this.getPoll);
-        polls.load();
-    };
-
-    Main.prototype.getPoll = function(poll_id){
-        var poll_data = _.findWhere(polls.data, {id:poll_id});
-        poll = new Poll(poll_data);
-
-        overview = new Overview(this.$sourceElement);
-
-        bean.on(poll, "get_question", this.getQuestion);
-        bean.on(poll, "show_overview", this.showOverview);
-
-        poll.getQuestion();
-    };
-
-    Main.prototype.showOverview = function(){
-        overview.init();
-    };
-
-    Main.prototype.getQuestion = function(question_id){
-        question = new Question(this.$sourceElement);
-        bean.on(question, "next_question",this.nextQuestion);
-        question.load(question_id);
-    };
-
-    Main.prototype.nextQuestion = function(filledInAnswer){
-        overview.addFilledInAnswer(filledInAnswer);
-        poll.getQuestion();
-    };*/
 
     return App;
 })();

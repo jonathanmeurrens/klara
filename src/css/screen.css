@@ -1,0 +1,16 @@
+/* line 1, ../sass/screen.scss */
+html {
+  height: 100%;
+}
+
+/* line 2, ../sass/screen.scss */
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* line 3, ../sass/screen.scss */
+#map-canvas {
+  height: 100%;
+}
