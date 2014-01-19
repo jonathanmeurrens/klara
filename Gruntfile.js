@@ -130,7 +130,9 @@ module.exports = function(grunt) {
               console:true,
               Handlebars:true,
               _:true,
-              bean:true
+              bean:true,
+              createjs:true,
+              stage:true
           },
         },
         files:{

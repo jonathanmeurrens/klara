@@ -3,14 +3,34 @@ html {
   height: 100%;
 }
 
-/* line 2, ../sass/screen.scss */
+/* line 5, ../sass/screen.scss */
 body {
   height: 100%;
   margin: 0;
   padding: 0;
 }
 
-/* line 3, ../sass/screen.scss */
+/* line 11, ../sass/screen.scss */
 #map-canvas {
   height: 100%;
+}
+
+/* line 16, ../sass/screen.scss */
+.labels {
+  color: #f5f5f5;
+  background-color: black;
+  font-family: "Lucida Grande", "Arial", sans-serif;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+  padding: 3px 5px;
+  width: auto;
+  white-space: nowrap;
+}
+
+/* line 28, ../sass/screen.scss */
+#cnvs {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
