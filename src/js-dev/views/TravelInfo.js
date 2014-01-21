@@ -15,8 +15,6 @@ var TravelInfo = (function(){
 
         this.view = new createjs.Container();
 
-        this.
-
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             if(appModel.nextSong != null){
 
