@@ -54,9 +54,9 @@ var DotInfo = (function(){
             console.log("[DotInfo] clicked on Twitter");
         });
 
-        console.log(this.titleTxt.getBounds().width);
+        //console.log(this.titleTxt.getBounds().width);
 
-        $(this.view).on('tick', $.proxy( tick, this ));
+        //$(this.view).on('tick', $.proxy( tick, this ));
     }
 
     function tick(e){

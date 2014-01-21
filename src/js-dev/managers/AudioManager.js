@@ -8,15 +8,19 @@
 
 var AudioManager = function(){};
 
-AudioManager.PLAYER_STATUS_CHANGED = "PLAYER_STATUS_CHANGED";
-AudioManager.player = document.getElementById("#player")[0];
+AudioManager.player = document.getElementById("player");
 AudioManager.isPlaying = true;
 
 
 AudioManager.togglePlay = function(){
-
+    if (AudioManager.player.paused) {
+        AudioManager.player.play();
+    }
+    else {
+        AudioManager.player.stop();
+    }
 };
 
 AudioManager.stop = function(){
-
+    AudioManager.player.stop();
 };

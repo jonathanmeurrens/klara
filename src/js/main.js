@@ -93,17 +93,14 @@ var Dot = (function(){
         this.view = new createjs.Container();
         this.circle = new createjs.Shape();
         this.circle.mouseEnabled = true;
-        this.circle.graphics.beginFill("#000").drawCircle(0, 0, 1.5);
+        this.circle.graphics.beginFill("#000000").drawCircle(0, 0, 1.5);
         this.view.x = stage.canvas.width / 2;
         this.view.y = stage.canvas.height / 2;
         this.view.addChild(this.circle);
         this.view.mouseEnabled = true;
-        this.view.alpha = 0;
 
         this.circle.addEventListener("click",$.proxy( function(){
-            var event = new createjs.Event(Dot.CLICKED, true);
-            event.songIndex =  this.songIndex;
-            this.view.dispatchEvent(event);
+            appModel.setCurrentSongIndex(this.songIndex);
         }, this ));
     }
 
@@ -111,8 +108,10 @@ var Dot = (function(){
         var marge = 0;
         /*var toX = marge + (Math.random() * (stage.canvas.width - (marge * 2)));
         var toY = marge + (Math.random() * (stage.canvas.height - (marge * 2)));*/
-        var toX = this.songIndex * 100;
-        var toY = stage.canvas.height/2 - 100 + Math.random() * 100;
+        this.view.alpha = 0;
+        //console.log((this.songIndex / appModel.userModel.songs.length) * (stage.canvas.width / 2));
+        var toX = stage.canvas.width / 2 - (((appModel.userModel.songs.length - (this.songIndex + 1))) * 150);
+        var toY = stage.canvas.height / 2;
         var speed = 3000 + Math.random() * 3000;
         this.circle.scaleX = this.circle.scaleY = 1;
         createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
@@ -122,16 +121,17 @@ var Dot = (function(){
         var toX = stage.canvas.width / 2;
         var toY = stage.canvas.height / 2;
         var speed = 3000 + Math.random() * 3000;
-        createjs.Tween.get(this.view).to({x:toX, y:toY}, speed, createjs.Ease.elasticOut);
+        this.view.alpha = 0;
+        createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
 
         this.circle.scaleX = this.circle.scaleY = 2.5;
     };
 
     Dot.prototype.showInfoView = function(){
         if(this.dotInfo == null){
-            this.dotInfo = new DotInfo(appModel.playlist[this.songIndex]);
+            this.dotInfo = new DotInfo(appModel.userModel.songs[this.songIndex]);
             this.view.addChild(this.dotInfo.view);
-            console.log("[Dot] show dot info");
+            //console.log("[Dot] show dot info");
         }
     };
 
@@ -139,13 +139,9 @@ var Dot = (function(){
         if(this.dotInfo != null){
             this.view.removeChild(this.dotInfo.view);
             this.dotInfo = null;
-            console.log("[Dot] hide dot info");
+            //console.log("[Dot] hide dot info");
         }
     };
-
-    function tick(e){
-
-    }
 
     return Dot;
 
@@ -207,9 +203,9 @@ var DotInfo = (function(){
             console.log("[DotInfo] clicked on Twitter");
         });
 
-        console.log(this.titleTxt.getBounds().width);
+        //console.log(this.titleTxt.getBounds().width);
 
-        $(this.view).on('tick', $.proxy( tick, this ));
+        //$(this.view).on('tick', $.proxy( tick, this ));
     }
 
     function tick(e){
@@ -220,6 +216,38 @@ var DotInfo = (function(){
     }
 
     return DotInfo;
+
+})();
+
+/**
+ * Created with JetBrains PhpStorm.
+ * User: Jonathan
+ * Date: 20/01/14
+ * Time: 22:27
+ * To change this template use File | Settings | File Templates.
+ */
+
+var MapLabel = (function(){
+
+    function MapLabel(x, y, txt){
+
+        this.view = new createjs.Container();
+
+        var lblTxt = new createjs.Text(txt,"12px Arial","#000000");
+
+        var bg = new createjs.Shape();
+
+        this.view.addChild(bg);
+        this.view.addChild(lblTxt);
+
+        this.view.x = x;
+        this.view.y = y;
+
+        //bg.graphics.beginFill("#000000").drawRect(0,0, lblTxt.getBounds().width, lblTxt.getBounds().height);
+        //console.log(lblTxt);
+    }
+
+    return MapLabel;
 
 })();
 
@@ -237,6 +265,7 @@ var DotInfo = (function(){
 /* globals Dot:true */
 /* globals Util:true */
 /* globals MarkerWithLabel:true */
+/* globals MapLabel:true */
 
 var MyMap = (function(){
 
@@ -248,163 +277,123 @@ var MyMap = (function(){
         this.dots = [];
         this.view = new createjs.Container();
 
+        this.mapWidth = 12000;
+        this.mapHeight = 12000;
+
+        this.bg = new createjs.Shape();
+        this.bg.graphics.beginFill("#ffffff").drawRect(0,0, this.mapWidth, this.mapHeight);
+        this.view.addChild(this.bg);
+
+        this.mapBg = new createjs.Bitmap("assets/geography-class6.png");
+        this.view.addChild(this.mapBg);
+
         this.lines = new createjs.Graphics();
         var linesShape = new createjs.Shape(this.lines);
         this.view.addChild(linesShape);
 
-        this.progressLine = new createjs.Graphics();
-        this.progressLineShape = new createjs.Shape(this.progressLine);
-        this.view.addChild(this.progressLineShape);
+        this.plane = new createjs.Bitmap("assets/plane.png");
+        this.plane.regX = this.plane.regY = 18/2;
+        this.view.addChild(this.plane);
 
-        bean.on(appModel, AppModel.DATA_LOADED, function(){
+        bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
+            console.log("[MyMap] loading done");
+
             self.draw();
-        });
-        bean.on(appModel, AppModel.CURRENT_SONG_CHANGED, function(){
-            centerDotWithIndex(appModel.currentSongIndex);
-        });
-        bean.on(appModel, AppModel.CURRENT_SONG_INFO_LOADED, function(){
+
             centerMapAndShowInfoForDotWithIndex(appModel.currentSongIndex);
+
+            var startX = self.dots[appModel.currentSongIndex].view.x;
+            var startY = self.dots[appModel.currentSongIndex].view.y;
+
+            self.plane.x = startX;
+            self.plane.y = startY;
+
+            if(self.dots.length >= appModel.currentSongIndex + 2) // is there a next desination?
+            {
+                var toX = self.dots[appModel.currentSongIndex + 1].view.x;
+                var toY = self.dots[appModel.currentSongIndex + 1].view.y;
+
+                console.log(calculateAngleFrom(startX, startY, toX, toY));
+                self.plane.rotation = - calculateAngleFrom(startX, startY, toX, toY) + 42;
+
+                createjs.Tween.get(self.plane).to({
+                    x: toX,
+                    y: toY
+                },appModel.userModel.songs[appModel.currentSongIndex].duration * 1000);
+            }
+    });
+        bean.on(appModel, AppModel.CURRENT_SONG_CHANGED, function(){
+            centerMapAndShowInfoForDotWithIndex(appModel.currentSongIndex);
+        });
+
+        this.view.addEventListener("mousedown", function(evt) {
+            var o = self.view;
+            self.view.offset = {x:o.x-evt.stageX, y:o.y-evt.stageY};
+        });
+
+        this.view.on("pressmove",function(evt) {
+            var o = self.view;
+            o.x = evt.stageX+ o.offset.x;
+            o.y = evt.stageY+ o.offset.y;
+
+            stage.update();
         });
 
         $(this.view).on('tick', $.proxy( tick, this ));
     }
 
+
+
     MyMap.prototype.draw = function(){
-        for(var i=0; i<AppModel.NEXT_SONGS_COUNT; i++){
+
+        var length = this.dots.length;
+        if(length < 0){
+            length = 0;
+        }
+
+        for(var i = length; i < appModel.userModel.songs.length; i++){
             var dot = new Dot(i);
             this.view.addChild(dot.view);
             this.dots.push(dot);
-            dot.view.addEventListener(Dot.CLICKED, dotClickedHandler);
+            var pos = convertGeoToPixel(appModel.userModel.songs[i].lat, appModel.userModel.songs[i].lng);
+            dot.view.x = pos.x;
+            dot.view.y = pos.y;
         }
-
-        //var bgColor = "#f1f0ed";
-
-        var styles = [
-
-            {
-                featureType: "all",
-                elementType: "all",
-                stylers: [
-                    { visibility: "off" }
-                ]
-            },
-            {
-                featureType: "water",
-                elementType: "geometry.fill",
-                stylers: [
-                    {color: "#eeeeee"},
-                    { visibility: "on" }
-                ]
-            },{
-                featureType: "landscape",
-                elementType: "geometry",
-                stylers: [
-                    {"color": "#FFFFFF"},
-                    { visibility: "on" }
-                ]
-            },/*{
-                featureType: "landscape.man_made",
-                elementType: "geometry.fill",
-                stylers: [
-                    { visibility: "simplified" }
-                ]
-            },{
-                featureType: "landscape.natural",
-                elementType: "geometry",
-                stylers: [
-                    {"color": bgColor},
-                    { visibility: "on" }
-                ]
-            },{
-                featureType: "landscape.natural.landcover",
-                elementType: "geometry.fill",
-                stylers: [
-                    {color: "#FFFFFF"},
-                    {weight: "0.1"},
-                    { visibility: "on" }
-                ]
-            },*/{
-                featureType: "landscape.natural",
-                elementType: "geometry.fill",
-                stylers: [
-                    {"color": "#FFFFFF"},
-                    { visibility: "on" }
-                ]
-            }
-
-        ];
-
-        this.mapOptions = {
-            center: new google.maps.LatLng(-34.397, 150.644),
-            zoom: 8,
-            mapTypeId: google.maps.StyledMapType.TERRAIN,
-            panControl: false,
-            zoomControl: false,
-            mapTypeControl: false,
-            scaleControl: false,
-            streetViewControl: false,
-            overviewMapControl: false
-        };
-        this.map = new google.maps.Map(document.getElementById("map-canvas"),
-            this.mapOptions);
-        this.map.setOptions({styles: styles});
-
-        addCapitalMarkersOnMap();
     };
 
     function addCapitalMarkersOnMap(){
         $.getJSON("assets/countries.json", function(data){
             for(var i=0; i<data.length; i++){
-                var marker = new MarkerWithLabel({
-                    position: new google.maps.LatLng(data[i].latlng[0],data[i].latlng[1]),
-                    draggable: true,
-                    map: self.map,
-                    labelContent: data[i].capital,
-                    labelAnchor: new google.maps.Point(22, 0),
-                    labelClass: "labels" // the CSS class for the label
-                    /*labelStyle: {opacity: 0.75}*/
-                });
-                marker.setIcon("assets/pixel_trans.gif");
+                var pos = convertGeoToPixel(data[i].latlng[0], data[i].latlng[1]);
+                var label = new MapLabel(pos.x, pos.y, data[i].capital);
+                self.view.addChild(label.view);
             }
         });
     }
 
-    function centerDotWithIndex(index){
-        console.log("[MyMap] current dot " + self.dots[index]);
-        self.dots[index].centerPosition();
-
-        for(var i=0; i<self.dots.length; i++){
-            if(i !== index){
-                self.dots[i].randomPosition();
-            }
-        }
-    }
-
     function centerMapAndShowInfoForDotWithIndex(index){
+        if(self.dots.length > 0){
 
-        for(var i=0; i<self.dots.length; i++){
-            self.dots[i].hideInfoView();
-        }
-
-        self.dots[index].showInfoView();
-
-        $.getJSON("http://maps.googleapis.com/maps/api/geocode/json?address="+
-            appModel.playlist[index].location +"&sensor=true",
-            function(data){
-                var location = new google.maps.LatLng(
-                    data.results[0].geometry.location.lat,
-                    data.results[0].geometry.location.lng
-                );
-                self.map.panTo(location);
-                self.map.setZoom(6);
+            if(index < 0){
+                // center on belgium
+                console.log("[MyMap] zoom out on map");
+                var pos = convertGeoToPixel(50.5333, 4.7667);
+                console.log(pos);
+                var toXpos = -pos.x + (stage.canvas.width/2);
+                var toYpos = -pos.y + (stage.canvas.height/2);
+                createjs.Tween.get(self.view).to({x: toXpos, y: toYpos}, 2000, createjs.Ease.cubicInOut);
             }
-        );
-    }
-
-    function dotClickedHandler(event){
-        console.log("[MyMap] dot: "+event.songIndex);
-        console.log(appModel.playlist[event.songIndex]);
-        appModel.setCurrentSongIndex(event.songIndex);
+            else{
+                // center map
+                for(var i=0; i<self.dots.length; i++){
+                    self.dots[i].hideInfoView();
+                }
+                self.dots[index].showInfoView();
+                var toX = -self.dots[index].view.x + (stage.canvas.width/2);
+                var toY = -self.dots[index].view.y + (stage.canvas.height/2);
+                createjs.Tween.get(self.view).to({x: toX, y: toY}, 2000, createjs.Ease.cubicInOut);
+            }
+        }
     }
 
     function tick(e){
@@ -415,25 +404,20 @@ var MyMap = (function(){
             this.lines.moveTo(this.dots[i].view.x, this.dots[i].view.y);
             this.lines.lineTo(this.dots[i+1].view.x, this.dots[i+1].view.y);
         }
+    }
 
-        /*this.progressLine.clear();
-        this.progressLine.setStrokeStyle(2);
-        this.progressLine.beginStroke(createjs.Graphics.getRGB(180,180,180));
-        this.progressLine.moveTo(this.dots[appModel.currentSongIndex].view.x, this.dots[appModel.currentSongIndex].view.y);
-        this.progressLine.lineTo(this.dots[appModel.currentSongIndex+1].view.x, this.dots[appModel.currentSongIndex+1].view.y);
-        this.progressLineShape.regX = this.dots[appModel.currentSongIndex].view.x;
-        this.progressLineShape.regY = this.dots[appModel.currentSongIndex].view.y;
-        this.progressLineShape.scaleX = this.progressLineShape.scaleY = 0.5;*/
-        /*if(appModel.currentSongIndex > 0){
-            console.log(calculateAngleFrom(this.dots[appModel.currentSongIndex].view.x, this.dots[appModel.currentSongIndex].view.y,
-                this.dots[appModel.currentSongIndex + 1].view.x, this.dots[appModel.currentSongIndex + 1].view.y));
-        }*/
+    function convertGeoToPixel(lat, lon){
+        var xPos = (lon+180) * (self.mapWidth/360);
+        var latRad = lat * Math.PI/180;
+        var mercN = Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
+        var yPos   = (self.mapHeight / 2) - (self.mapWidth * mercN / (2 * Math.PI));
+        return {x: xPos, y: yPos};
     }
 
     function calculateAngleFrom (xPos1, yPos1, xPos2, yPos2){
         var deltaX = yPos2 - yPos1;
         var deltaY = xPos2 - xPos1;
-        var angleInDegress = Math.atan2(deltaX, deltaY);
+        var angleInDegress = Math.atan2(deltaX, deltaY) * 180 / Math.PI;
         return angleInDegress;
     }
 
@@ -471,16 +455,40 @@ var Particles = (function(){
  * To change this template use File | Settings | File Templates.
  */
 
+/* globals AudioManager:true */
+/* globals appModel:true */
 
 var Player = (function(){
 
+    var self;
+
     function Player(){
 
+        self = this;
+
         this.view = new createjs.Container();
-        
+        this.player = document.getElementById("player");
+
+        var mute_data = {
+            images: ["assets/buttons/play_pause.png"],
+            frames: {width:28.5, height:37},
+            animations: {on:[0], mute:[1]}
+        };
+        var muteBtnspritesheet = new createjs.SpriteSheet(mute_data);
+        this.muteBtnSprite = new createjs.Sprite(muteBtnspritesheet);
+        this.view.addChild(this.muteBtnSprite);
+        this.muteBtnSprite.addEventListener("click", function(e){
+            if (self.player.paused) {
+                self.player.play();
+                self.muteBtnSprite.gotoAndStop("on");
+            }
+            else {
+                self.player.pause();
+                self.muteBtnSprite.gotoAndStop("mute");
+            }
+            appModel.setIsPlaying(!self.player.paused);
+        });
     }
-
-
 
     return Player;
 
@@ -496,6 +504,7 @@ var Player = (function(){
 
 /* globals UserModel:true */
 /* globals ScreenManager:true */
+/* globals AppModel:true */
 /* globals appModel:true */
 
 var Progress = (function(){
@@ -507,6 +516,7 @@ var Progress = (function(){
         self = this;
 
         bean.on(appModel.userModel, UserModel.PROGRESS_CHANGED, userProgressChangedHandler);
+        bean.on(appModel, AppModel.PLAYER_STATUS_CHANGED, playerStatusChangedHandler);
 
         this.view = new createjs.Container();
         this.view.regX = this.view.regY = -65/2;
@@ -571,6 +581,17 @@ var Progress = (function(){
         self.progressTxt.text = appModel.userModel.progress + "/20000KM";
     }
 
+    function playerStatusChangedHandler(){
+        if(!appModel.isPlaying){
+            clearTimeout(self.progressTimer);
+            self.progressTimer = null;
+        }else{
+            self.progressTimer = setInterval(function(){
+                appModel.userModel.setProgress(appModel.userModel.progress += 1);
+            },1000);
+        }
+    }
+
     function tick(){
         if(this.plane != null){
             this.plane.rotation -= 0.5;
@@ -613,6 +634,37 @@ var Timeline = (function(){
 /**
  * Created with JetBrains PhpStorm.
  * User: Jonathan
+ * Date: 21/01/14
+ * Time: 21:51
+ * To change this template use File | Settings | File Templates.
+ */
+
+/* globals appModel:true */
+/* globals AppModel:true */
+
+var TravelInfo = (function(){
+
+    function TravelInfo(){
+
+        this.view = new createjs.Container();
+
+        this.
+
+        bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
+            if(appModel.nextSong != null){
+
+                console.log("[TravelInfo] update info",appModel.nextSong.location);
+            }
+        });
+    }
+
+    return TravelInfo;
+
+})();
+
+/**
+ * Created with JetBrains PhpStorm.
+ * User: Jonathan
  * Date: 16/01/14
  * Time: 19:31
  * To change this template use File | Settings | File Templates.
@@ -620,17 +672,21 @@ var Timeline = (function(){
 
 var AudioManager = function(){};
 
-AudioManager.PLAYER_STATUS_CHANGED = "PLAYER_STATUS_CHANGED";
-AudioManager.player = document.getElementById("#player")[0];
+AudioManager.player = document.getElementById("player");
 AudioManager.isPlaying = true;
 
 
 AudioManager.togglePlay = function(){
-
+    if (AudioManager.player.paused) {
+        AudioManager.player.play();
+    }
+    else {
+        AudioManager.player.stop();
+    }
 };
 
 AudioManager.stop = function(){
-
+    AudioManager.player.stop();
 };
 
 /**
@@ -676,6 +732,8 @@ ScreenManager.removeCurrentScreen = function(){
 
 /* globals Util:true */
 /* globals UserModel:true */
+/* globals SongModel:true */
+/* globals appModel:true */
 
 
 var AppModel = (function(){
@@ -690,14 +748,17 @@ var AppModel = (function(){
         AppModel.CURRENT_SONG_CHANGED = "CURRENT_SONG_CHANGED";
         AppModel.ARTIST_INFO_LOADED = "ARTIST_INFO_LOADED";
         AppModel.CURRENT_SONG_INFO_LOADED = "CURRENT_SONG_INFO_LOADED";
-        //AppModel.CURRENT_SCREEN_TYPE_CHANGED = "CURRENT_SCREEN_TYPE_CHANGED";
+        AppModel.NOW_AND_NEXT_LOADED = "NOW_AND_NEXT_LOADED";
+        AppModel.PLAYER_STATUS_CHANGED = "PLAYER_STATUS_CHANGED";
+        AppModel.NEXT_SONG_CHANGED = "NEXT_SONG_CHANGED";
 
-        this.playlist = [];
-        this.currentSongIndex = 0;
+        this.currentSongIndex = null;
         this.userModel = new UserModel();
-        //this.currentScreenType = "";
-
-        this.dataProgress = 0;
+        this.isPlaying = true;
+        this.currentSong = null;
+        this.nextSong = null;
+        this.loadingCount = 0;
+        this.loadingProgress = 0;
     }
 
 
@@ -705,7 +766,7 @@ var AppModel = (function(){
     ----------------------- API DATA
      */
 
-    AppModel.prototype.getPlaylist = function(){
+    AppModel.prototype.fetchPlaylist = function(){
         $.getJSON(Util.api + '/playlist')
             .done(this.getPlaylistHandler);
     };
@@ -713,95 +774,108 @@ var AppModel = (function(){
     AppModel.prototype.getPlaylistHandler = function(data){
         self.playlist = data.list;
         if(self.playlist.length>0){
-            bean.fire(self,AppModel.DATA_LOADED);
-            self.getCurrentSong();
+            self.fetchNowAndNext();
         }
         else{
             console.log("[AppModel] nog geen playlist beschikbaar");
         }
     };
 
-    /*AppModel.prototype.getInfoForPlaylist = function(){
-        this.counter = 0;
-        this.interval = setInterval(function(){
-            if(self.counter >= AppModel.NEXT_SONGS_COUNT){
-                clearInterval(self.interval);
-                self.counter = 0;
-                return;
-            }
-            $.getJSON(Util.api + '/info?artist='+self.playlist[self.counter].artist, (function(){
-                var song_index = self.counter;
-                self.counter++;
-                console.log(song_index, self.counter);
-                return function(data){
-                    self.getInfoHandler(data, song_index);
-                };
-            })());
-        },100);
-    };*/
-
-    /*AppModel.prototype.getInfoHandler = function(data, song_index){
-        var artist = null;
-        if(Array.isArray(data["artist-list"].artist)){
-            artist = data["artist-list"].artist[0];
-        }else{
-            artist = data["artist-list"].artist;
-        }
-        if(artist.hasOwnProperty("area")){
-            self.playlist[song_index].location = artist.area.name;
-            $.getJSON("http://maps.googleapis.com/maps/api/geocode/json?address="+
-                self.playlist[song_index].location +"&sensor=true",
-                (function(){
-                    var index = song_index;
-                    return function(data){
-                        self.playlist[index].coordinates = {'long':data.results[0].geometry.location.lng,
-                            'lat':data.results[0].geometry.location.lat};
-                        console.log("[AppModel] index coordinates"+index);
-                    };
-                })());
-        }
-        this.dataProgress++;
-        if(this.dataProgress === AppModel.NEXT_SONGS_COUNT){
-            //self.getLongAndLatForPlaylist(self.playlist);
-            bean.fire(self,"DATA_LOADED");
-        }
-    };*/
-
-
-    AppModel.prototype.getCurrentSong = function(){
+    AppModel.prototype.fetchNowAndNext = function(){
         $.getJSON(Util.api + '/nummer')
-            .done(this.getCurrentSongHandler);
+            .done(self.fetchNowAndNextHandler);
     };
 
-    AppModel.prototype.getCurrentSongHandler = function(data){
-        console.log(data);
-        for(var i=0; i<data.onairs.length; i++){
-            if(data.onairs[i].onairType === "PREVIOUS" && data.onairs[i].type ==="SONG"){
-                for(var j=0; j<self.playlist.length; j++){
-                    if(self.playlist[j].title === data.onairs[i].properties[1].value){
-                        self.setCurrentSongIndex(j);
-                    }
-                }
+    AppModel.prototype.fetchNowAndNextHandler = function(data){
+        var currentSong = null;
+        var nextSong = null;
+        self.infoNowAndNextProgress = 0;
+        self.loadingCount = 0;
+        self.loadingProgress = 0;
+
+        var song = null;
+        for(var k=0; k<data.onairs.length; k++){
+
+            song = new SongModel();
+            song.title = data.onairs[k].properties[1].value;
+            song.artist = data.onairs[k].properties[0].value;
+            var startDate = new Date(data.onairs[k].startDate);
+            var endDate = new Date(data.onairs[k].endDate);
+            song.duration = (endDate.getTime() - startDate.getTime())/1000;
+            console.log(song.duration);
+
+            if(data.onairs[k].onairType === "NOW" && data.onairs[k].type ==="SONG")
+            {
+               currentSong = song;
+
             }
+            else if(data.onairs[k].onairType === "NEXT" && data.onairs[k].type ==="SONG")
+            {
+               nextSong = song;
+            }
+        }
+
+        console.log("[AppModel]", currentSong, nextSong);
+        // nieuw nummer bij start
+        if(currentSong != null && nextSong == null && self.currentSong == null){
+            console.log("[AppModel] nieuw now");
+            self.currentSong = currentSong;
+            self.userModel.songs.push(currentSong);
+            self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, true);
+        }
+        else if((self.currentSong == null && self.nextSong == null) && (currentSong != null && nextSong != null)){
+            console.log("[AppModel] nieuw now & next");
+            self.currentSong = currentSong;
+            self.userModel.songs.push(currentSong);
+            self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, true);
+            self.nextSong = nextSong;
+            self.userModel.songs.push(nextSong);
+            self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false);
+        }
+        // het huidig nummer is het vorig nummer
+        else if(self.nextSong != null && self.nextSong.title === currentSong.title){
+            console.log("[AppModel] next wordt now");
+            // next nummer in array word huidig nummer
+            var currentSongIndex = self.userModel.songs.length - 1;
+            self.nextSong = nextSong;
+            self.userModel.songs.push(nextSong);
+            self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false); // fetch next song data
+            self.setCurrentSongIndex(currentSongIndex);
+        }
+        // huidig nummer is gewijzigd
+        else if(currentSong != null && self.currentSong.title !== currentSong.title){
+            console.log("[AppModel] huidig nummer is gewijzigd");
+
+        }
+        // er is al een now song, maar next is nieuw
+        else if(self.nextSong == null && nextSong != null){
+            console.log("[AppModel] nextSong komt erbij ");
+            self.nextSong = nextSong;
+            self.userModel.songs.push(nextSong);
+            self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false);
+        }
+        else{
+            console.log("[AppModel] huidig nummer is ongewijzigd");
         }
     };
 
-    AppModel.prototype.getInfoForSongCurrentSong = function(){
-        console.log(self.playlist[self.currentSongIndex]);
-        var artist = self.playlist[self.currentSongIndex].artist;
-        console.log(artist);
+    AppModel.prototype.fetchInfoForSongWithIndex = function(songIndex, isCurrentSong){
+        self.loadingCount++;
+        console.log("[AppModel] fetchInfoForSongWithIndex: "+self.loadingCount);
+
+        var artist = null;
+        artist = self.userModel.songs[songIndex].artist;
+
         if(artist.indexOf('  ')>0){
             artist = artist.substring(0, artist.indexOf('  '));
         }
         if(artist.indexOf(';')>0){
             artist = artist.substring(0, artist.indexOf(';'));
         }
-        console.log(artist);
+
         $.getJSON(Util.api + '/info?artist='+artist, (function(){
-            var index = self.currentSongIndex;
             return function(data){
                 var artist = null;
-                console.log(data);
                 if(data["artist-list"].hasOwnProperty("artist"))
                 {
                     if(Array.isArray(data["artist-list"].artist)){
@@ -812,29 +886,52 @@ var AppModel = (function(){
 
                     if(artist.hasOwnProperty("life-span")){
                         if(artist["life-span"].hasOwnProperty("begin")){
-                            self.playlist[index].period = artist["life-span"].begin.substring(0,4);
-                        }else{
-                            self.playlist[index].period = 2014;
+                           self.userModel.songs[songIndex].period = artist["life-span"].begin.substring(0,4);
                         }
-                    }else{
-                        self.playlist[index].period = 2014;
                     }
-                    console.log(self.playlist[index].period);
 
                     if(artist.hasOwnProperty("area")){
-                        self.playlist[index].location = artist.area.name;
+                        self.userModel.songs[songIndex].location = artist.area.name;
                     }else{
                         for(var i=0; i<data["artist-list"].artist.length; i++){
                             if(data["artist-list"].artist[i].hasOwnProperty("area")){
-                                self.playlist[index].location = data["artist-list"].artist[i].area.name;
+                                self.userModel.songs[songIndex].location = data["artist-list"].artist[i].area.name;
                                 break;
                             }
                         }
                     }
                 }
-                bean.fire(self, AppModel.CURRENT_SONG_INFO_LOADED);
+                self.fetchLngAndLatForSongWithIndex(songIndex, isCurrentSong);
             };
         })());
+    };
+
+    AppModel.prototype.fetchLngAndLatForSongWithIndex = function(index, isCurrentSong){
+
+        console.log(appModel.userModel.songs[index].location);
+        $.getJSON("http://maps.googleapis.com/maps/api/geocode/json?address="+
+            appModel.userModel.songs[index].location +"&sensor=true",
+            function(data){
+                appModel.userModel.songs[index].lat = data.results[0].geometry.location.lat;
+                appModel.userModel.songs[index].lng = data.results[0].geometry.location.lng;
+
+                if(isCurrentSong){
+                    console.log("[AppModel] setCurrentIndex: "+index);
+                    self.currentSongIndex = index;
+                }
+
+                self.loadingProgress++;
+                if(self.loadingProgress >= self.loadingCount){
+                    // set local current and next songs when everything is loaded
+                    self.currentSong = appModel.userModel.songs[self.currentSongIndex];
+                    if(appModel.userModel.songs.length >= self.currentSongIndex + 2){
+                        self.nextSong = appModel.userModel.songs[self.currentSongIndex + 1];
+                    }
+                    //console.log(self.currentSong, self.nextSong);
+                    bean.fire(self, AppModel.NOW_AND_NEXT_LOADED);
+                }
+            }
+        );
     };
 
 
@@ -842,38 +939,28 @@ var AppModel = (function(){
      --------------------- LOCAL DATA
      */
 
-    /*AppModel.prototype.setUserProgress = function(progress){
-        this.userModel.progress = progress;
-        bean.fire(self,AppModel.USER_PROGRESS_CHANGED);
-    };*/
-
     AppModel.prototype.setCurrentSongIndex = function(index){
-        self.currentSongIndex = index;
-        bean.fire(self,AppModel.CURRENT_SONG_CHANGED);
-        self.getInfoForSongCurrentSong();
-
-        //this.userModel.setProgress(this.userModel.progress + 50);
+        if(index !== self.currentSongIndex){
+            self.currentSongIndex = index;
+            self.currentSong = self.userModel.songs[self.currentSongIndex];
+            bean.fire(self,AppModel.CURRENT_SONG_CHANGED);
+        }
     };
 
-   /* AppModel.prototype.setCurrentScreenType = function(screenType){
-        this.currentScreenType = screenType;
-        bean.fire(self,AppModel.CURRENT_SCREEN_TYPE_CHANGED);
-    };*/
-
-   /* AppModel.prototype.getLongAndLatForPlaylist = function(playlist){
-        var locationsQuery = "";
-        for(var i=0; i<AppModel.NEXT_SONGS_COUNT; i++){
-            if(playlist[i].location){
-                locationsQuery += "&location=" + playlist[i].location;
-                console.log("[AppModel] "+playlist[i].location);
-            }
+    AppModel.prototype.addNextSong = function(song){
+        if(song !== this.nextSong){
+            this.nextSong = song;
+            bean.fire(self,AppModel.NEXT_SONG_CHANGED);
+            self.getInfoForSongWithIndex(-1, true);
         }
-        console.log(locationsQuery);
-    };*/
+    };
 
-   /* AppModel.prototype.getLongAndLatForPlayListHandler = function(data){
-        console.log(data);
-    };*/
+    AppModel.prototype.setIsPlaying = function(status){
+        if(status !== this.isPlaying){
+            this.isPlaying = status;
+            bean.fire(this,AppModel.PLAYER_STATUS_CHANGED);
+        }
+    };
 
     return AppModel;
 
@@ -881,6 +968,23 @@ var AppModel = (function(){
 
 
 AppModel.NEXT_SONGS_COUNT = 20;
+
+var SongModel = (function(){
+
+    function SongModel(){
+
+        this.title = "";
+        this.artist = "";
+        this.lng = 0;
+        this.lat = 0;
+        this.location = "";
+        this.duration = 0;
+        this.period = 2014;
+    }
+
+
+    return SongModel;
+})();
 
 var UserModel = (function(){
 
@@ -890,9 +994,13 @@ var UserModel = (function(){
         UserModel.PROGRESS_CHANGED = "PROGRESS_CHANGED";
 
         this.progress = 0;
+        this.songs = [];
 
+        /*eraseCookie(UserModel.COOKIE_NAME);
         var cookie = JSON.parse(readCookie(UserModel.COOKIE_NAME));
-        this.setProgress(cookie.progress);
+        if(cookie != null){
+            this.setProgress(cookie.progress);
+        }*/
     }
 
     UserModel.prototype.save = function(){
@@ -1018,8 +1126,10 @@ var Util = (function(){
 /* globals MyMap:true */
 /* globals SoundManager:true */
 /* globals Progress:true */
+/* globals Player:true */
+/* globals TravelInfo:true */
 
-var REFRESH_RATE = 10000;
+var REFRESH_RATE = 20000;
 
 var appModel, stage;
 
@@ -1034,18 +1144,26 @@ var App = (function(){
 
         stage = new createjs.Stage(document.getElementById("cnvs"));
         stage.enableMouseOver();
+        stage.mouseMoveOutside = true;
         createjs.Ticker.addEventListener("tick",tick);
         createjs.Ticker.setFPS(60);
         createjs.Ticker.useRAF = true;
 
         appModel = new AppModel();
-        appModel.getPlaylist();
+        appModel.fetchNowAndNext();
+        setInterval(appModel.fetchNowAndNext,REFRESH_RATE);
 
         this.map = new MyMap();
         stage.addChild(this.map.view);
 
         this.progress = new Progress(70, 70);
         stage.addChild(this.progress.view);
+
+        this.travelInfo = new TravelInfo();
+        stage.addChild(this.travelInfo.view);
+
+        this.player = new Player();
+        stage.addChild(this.player.view);
     }
 
     function tick(){

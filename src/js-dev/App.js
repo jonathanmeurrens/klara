@@ -12,8 +12,10 @@
 /* globals MyMap:true */
 /* globals SoundManager:true */
 /* globals Progress:true */
+/* globals Player:true */
+/* globals TravelInfo:true */
 
-var REFRESH_RATE = 10000;
+var REFRESH_RATE = 20000;
 
 var appModel, stage;
 
@@ -28,18 +30,26 @@ var App = (function(){
 
         stage = new createjs.Stage(document.getElementById("cnvs"));
         stage.enableMouseOver();
+        stage.mouseMoveOutside = true;
         createjs.Ticker.addEventListener("tick",tick);
         createjs.Ticker.setFPS(60);
         createjs.Ticker.useRAF = true;
 
         appModel = new AppModel();
-        appModel.getPlaylist();
+        appModel.fetchNowAndNext();
+        setInterval(appModel.fetchNowAndNext,REFRESH_RATE);
 
         this.map = new MyMap();
         stage.addChild(this.map.view);
 
         this.progress = new Progress(70, 70);
         stage.addChild(this.progress.view);
+
+        this.travelInfo = new TravelInfo();
+        stage.addChild(this.travelInfo.view);
+
+        this.player = new Player();
+        stage.addChild(this.player.view);
     }
 
     function tick(){

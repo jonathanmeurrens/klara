@@ -6,17 +6,22 @@
  * To change this template use File | Settings | File Templates.
  */
 
+/* globals AudioManager:true */
+/* globals appModel:true */
 
 var Player = (function(){
 
+    var self;
+
     function Player(){
 
-        this.view = new createjs.Container();
+        self = this;
 
-        // SOUND MUTE
-        //SoundManager.playSounds = gameData.gamerData.isMusicOn;
+        this.view = new createjs.Container();
+        this.player = document.getElementById("player");
+
         var mute_data = {
-            images: ["assets/common/buttons/play_pause.png"],
+            images: ["assets/buttons/play_pause.png"],
             frames: {width:28.5, height:37},
             animations: {on:[0], mute:[1]}
         };
@@ -24,13 +29,17 @@ var Player = (function(){
         this.muteBtnSprite = new createjs.Sprite(muteBtnspritesheet);
         this.view.addChild(this.muteBtnSprite);
         this.muteBtnSprite.addEventListener("click", function(e){
-            SoundManager.toggleSound();
-            updateMuteBtnState();
+            if (self.player.paused) {
+                self.player.play();
+                self.muteBtnSprite.gotoAndStop("on");
+            }
+            else {
+                self.player.pause();
+                self.muteBtnSprite.gotoAndStop("mute");
+            }
+            appModel.setIsPlaying(!self.player.paused);
         });
-
     }
-
-
 
     return Player;
 

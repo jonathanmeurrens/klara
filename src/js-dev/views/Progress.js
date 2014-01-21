@@ -8,6 +8,7 @@
 
 /* globals UserModel:true */
 /* globals ScreenManager:true */
+/* globals AppModel:true */
 /* globals appModel:true */
 
 var Progress = (function(){
@@ -19,6 +20,7 @@ var Progress = (function(){
         self = this;
 
         bean.on(appModel.userModel, UserModel.PROGRESS_CHANGED, userProgressChangedHandler);
+        bean.on(appModel, AppModel.PLAYER_STATUS_CHANGED, playerStatusChangedHandler);
 
         this.view = new createjs.Container();
         this.view.regX = this.view.regY = -65/2;
@@ -81,6 +83,17 @@ var Progress = (function(){
 
     function userProgressChangedHandler(){
         self.progressTxt.text = appModel.userModel.progress + "/20000KM";
+    }
+
+    function playerStatusChangedHandler(){
+        if(!appModel.isPlaying){
+            clearTimeout(self.progressTimer);
+            self.progressTimer = null;
+        }else{
+            self.progressTimer = setInterval(function(){
+                appModel.userModel.setProgress(appModel.userModel.progress += 1);
+            },1000);
+        }
     }
 
     function tick(){

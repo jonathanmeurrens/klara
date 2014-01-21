@@ -1,0 +1,54 @@
+{"onairs": [
+  {
+    "channelCode": "31",
+    "startDate": "2014-01-19T14:26:29.350Z",
+    "endDate": "2014-01-19T14:31:08.350Z",
+    "type": "SONG",
+    "onairType": "PREVIOUS",
+    "properties" : [
+		{
+    		"key" : "ARTISTNAME",
+    		"value"  : "Steven Kolacny  piano  "
+},		{
+    		"key" : "TITLE",
+    		"value"  : "5 pianostukken: 2.Menuet - 4.Wals"
+},		{
+    		"key" : "COMPOSER",
+    		"value"  : "Herman Meulemans"
+}    ]
+},  {
+    "channelCode": "31",
+    "startDate": "2014-01-19T14:31:48.052Z",
+    "endDate": "2014-01-19T14:36:58.052Z",
+    "type": "SONG",
+    "onairType": "NEXT",
+    "properties" : [
+		{
+    		"key" : "ARTISTNAME",
+    		"value"  : "Michel"
+},		{
+    		"key" : "TITLE",
+    		"value"  : "Test12 Tannhäuser: Blick' ich umher in diesem edlen Kreise"
+},		{
+    		"key" : "COMPOSER",
+    		"value"  : "Richard Wagner"
+}    ]
+}, {
+    "channelCode": "31",
+    "startDate": "2014-01-19T14:26:29.350Z",
+    "endDate": "2014-01-19T14:31:08.350Z",
+    "type": "SONG",
+    "onairType": "NOW",
+    "properties" : [
+        {
+            "key" : "ARTISTNAME",
+            "value"  : "Stromae"
+},      {
+            "key" : "TITLE",
+            "value"  : "18 pianostukken: 2.Menuet - 4.Wals"
+},      {
+            "key" : "COMPOSER",
+            "value"  : "Herman Meulemans"
+}    ]
+}
+]}

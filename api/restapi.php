@@ -17,7 +17,8 @@ $app->run();
 
 
 function getNummer(){
-    echo file_get_contents('http://services.vrt.be/playlist/onair?channel_code=31&accept=application%2Fvnd.playlist.vrt.be.noa_1.0%2Bjson');
+    //echo file_get_contents('http://services.vrt.be/playlist/onair?channel_code=31&accept=application%2Fvnd.playlist.vrt.be.noa_1.0%2Bjson');
+    echo file_get_contents('http://localhost:8888/devine/MAV/klara/src/assets/nummer.json');
     exit();
 }
 

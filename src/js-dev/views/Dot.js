@@ -23,17 +23,14 @@ var Dot = (function(){
         this.view = new createjs.Container();
         this.circle = new createjs.Shape();
         this.circle.mouseEnabled = true;
-        this.circle.graphics.beginFill("#000").drawCircle(0, 0, 1.5);
+        this.circle.graphics.beginFill("#000000").drawCircle(0, 0, 1.5);
         this.view.x = stage.canvas.width / 2;
         this.view.y = stage.canvas.height / 2;
         this.view.addChild(this.circle);
         this.view.mouseEnabled = true;
-        this.view.alpha = 0;
 
         this.circle.addEventListener("click",$.proxy( function(){
-            var event = new createjs.Event(Dot.CLICKED, true);
-            event.songIndex =  this.songIndex;
-            this.view.dispatchEvent(event);
+            appModel.setCurrentSongIndex(this.songIndex);
         }, this ));
     }
 
@@ -41,8 +38,10 @@ var Dot = (function(){
         var marge = 0;
         /*var toX = marge + (Math.random() * (stage.canvas.width - (marge * 2)));
         var toY = marge + (Math.random() * (stage.canvas.height - (marge * 2)));*/
-        var toX = this.songIndex * 100;
-        var toY = stage.canvas.height/2 - 100 + Math.random() * 100;
+        this.view.alpha = 0;
+        //console.log((this.songIndex / appModel.userModel.songs.length) * (stage.canvas.width / 2));
+        var toX = stage.canvas.width / 2 - (((appModel.userModel.songs.length - (this.songIndex + 1))) * 150);
+        var toY = stage.canvas.height / 2;
         var speed = 3000 + Math.random() * 3000;
         this.circle.scaleX = this.circle.scaleY = 1;
         createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
@@ -52,16 +51,17 @@ var Dot = (function(){
         var toX = stage.canvas.width / 2;
         var toY = stage.canvas.height / 2;
         var speed = 3000 + Math.random() * 3000;
-        createjs.Tween.get(this.view).to({x:toX, y:toY}, speed, createjs.Ease.elasticOut);
+        this.view.alpha = 0;
+        createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
 
         this.circle.scaleX = this.circle.scaleY = 2.5;
     };
 
     Dot.prototype.showInfoView = function(){
         if(this.dotInfo == null){
-            this.dotInfo = new DotInfo(appModel.playlist[this.songIndex]);
+            this.dotInfo = new DotInfo(appModel.userModel.songs[this.songIndex]);
             this.view.addChild(this.dotInfo.view);
-            console.log("[Dot] show dot info");
+            //console.log("[Dot] show dot info");
         }
     };
 
@@ -69,13 +69,9 @@ var Dot = (function(){
         if(this.dotInfo != null){
             this.view.removeChild(this.dotInfo.view);
             this.dotInfo = null;
-            console.log("[Dot] hide dot info");
+            //console.log("[Dot] hide dot info");
         }
     };
-
-    function tick(e){
-
-    }
 
     return Dot;
 

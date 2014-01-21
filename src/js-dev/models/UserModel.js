@@ -6,9 +6,13 @@ var UserModel = (function(){
         UserModel.PROGRESS_CHANGED = "PROGRESS_CHANGED";
 
         this.progress = 0;
+        this.songs = [];
 
+        /*eraseCookie(UserModel.COOKIE_NAME);
         var cookie = JSON.parse(readCookie(UserModel.COOKIE_NAME));
-        this.setProgress(cookie.progress);
+        if(cookie != null){
+            this.setProgress(cookie.progress);
+        }*/
     }
 
     UserModel.prototype.save = function(){
