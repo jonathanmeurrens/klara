@@ -1,9 +1,12 @@
 var UserModel = (function(){
 
+
+
     function UserModel(){
 
         UserModel.COOKIE_NAME = "KLARA_REIS";
         UserModel.PROGRESS_CHANGED = "PROGRESS_CHANGED";
+        UserModel.LISTENING_TARGET = 20000;
 
         this.progress = 0;
         this.songs = [];

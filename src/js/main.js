@@ -201,6 +201,8 @@ var DotInfo = (function(){
         twButton.view.y = -25;
         twButton.view.addEventListener("click", function(e){
             console.log("[DotInfo] clicked on Twitter");
+            var url = "http://twitter.com/home?status=" + encodeURIComponent('I love Klara');
+            window.open(url,'_blank');
         });
 
         //console.log(this.titleTxt.getBounds().width);
@@ -561,6 +563,9 @@ var Progress = (function(){
 
         this.progressTimer = setInterval(function(){
             appModel.userModel.setProgress(appModel.userModel.progress += 1);
+            if(appModel.userModel.progress === UserModel.LISTENING_TARGET){
+                console.log("[UserModel] show form");
+            }
         },1000);
 
         $(this.view).on('tick', $.proxy( tick, this ));
@@ -578,7 +583,7 @@ var Progress = (function(){
     }
 
     function userProgressChangedHandler(){
-        self.progressTxt.text = appModel.userModel.progress + "/20000KM";
+        self.progressTxt.text = appModel.userModel.progress + "/"+ UserModel.LISTENING_TARGET +"KM";
     }
 
     function playerStatusChangedHandler(){
@@ -644,15 +649,28 @@ var Timeline = (function(){
 
 var TravelInfo = (function(){
 
+    var self;
+
     function TravelInfo(){
+
+        self = this;
 
         this.view = new createjs.Container();
 
-        this.
+        this.nextDestinationTxt = new createjs.Text("","12px Arial", "#000000");
+        this.view.addChild(this.nextDestinationTxt);
+
+        this.nextTitleTxt = new createjs.Text("","10px Arial", "#000000");
+        this.nextTitleTxt.y = 20;
+        this.view.addChild(this.nextTitleTxt);
+
+        this.view.y = stage.canvas.height - 80;
+        this.view.x = 40;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             if(appModel.nextSong != null){
-
+                self.nextDestinationTxt.text = "next destination: " + appModel.nextSong.location;
+                self.nextTitleTxt.text = appModel.nextSong.title;
                 console.log("[TravelInfo] update info",appModel.nextSong.location);
             }
         });
@@ -773,12 +791,13 @@ var AppModel = (function(){
 
     AppModel.prototype.getPlaylistHandler = function(data){
         self.playlist = data.list;
-        if(self.playlist.length>0){
+        console.log(data);
+        /*if(self.playlist.length>0){
             self.fetchNowAndNext();
         }
         else{
             console.log("[AppModel] nog geen playlist beschikbaar");
-        }
+        }*/
     };
 
     AppModel.prototype.fetchNowAndNext = function(){
@@ -800,6 +819,8 @@ var AppModel = (function(){
             song.title = data.onairs[k].properties[1].value;
             song.artist = data.onairs[k].properties[0].value;
             var startDate = new Date(data.onairs[k].startDate);
+            //var startDate = new Date();
+            console.log(startDate);
             var endDate = new Date(data.onairs[k].endDate);
             song.duration = (endDate.getTime() - startDate.getTime())/1000;
             console.log(song.duration);
@@ -966,9 +987,6 @@ var AppModel = (function(){
 
 })();
 
-
-AppModel.NEXT_SONGS_COUNT = 20;
-
 var SongModel = (function(){
 
     function SongModel(){
@@ -988,10 +1006,13 @@ var SongModel = (function(){
 
 var UserModel = (function(){
 
+
+
     function UserModel(){
 
         UserModel.COOKIE_NAME = "KLARA_REIS";
         UserModel.PROGRESS_CHANGED = "PROGRESS_CHANGED";
+        UserModel.LISTENING_TARGET = 20000;
 
         this.progress = 0;
         this.songs = [];
@@ -1151,19 +1172,20 @@ var App = (function(){
 
         appModel = new AppModel();
         appModel.fetchNowAndNext();
+        appModel.fetchPlaylist();
         setInterval(appModel.fetchNowAndNext,REFRESH_RATE);
 
         this.map = new MyMap();
         stage.addChild(this.map.view);
-
-        this.progress = new Progress(70, 70);
-        stage.addChild(this.progress.view);
 
         this.travelInfo = new TravelInfo();
         stage.addChild(this.travelInfo.view);
 
         this.player = new Player();
         stage.addChild(this.player.view);
+
+        this.progress = new Progress(70, 70);
+        stage.addChild(this.progress.view);
     }
 
     function tick(){

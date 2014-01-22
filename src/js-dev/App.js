@@ -37,19 +37,20 @@ var App = (function(){
 
         appModel = new AppModel();
         appModel.fetchNowAndNext();
+        appModel.fetchPlaylist();
         setInterval(appModel.fetchNowAndNext,REFRESH_RATE);
 
         this.map = new MyMap();
         stage.addChild(this.map.view);
-
-        this.progress = new Progress(70, 70);
-        stage.addChild(this.progress.view);
 
         this.travelInfo = new TravelInfo();
         stage.addChild(this.travelInfo.view);
 
         this.player = new Player();
         stage.addChild(this.player.view);
+
+        this.progress = new Progress(70, 70);
+        stage.addChild(this.progress.view);
     }
 
     function tick(){

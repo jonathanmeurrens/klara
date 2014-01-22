@@ -18,8 +18,8 @@
 }    ]
 },  {
     "channelCode": "31",
-    "startDate": "2014-01-19T14:31:48.052Z",
-    "endDate": "2014-01-19T14:36:58.052Z",
+    "startDate": "2014-01-21T23:24:29.350Z",
+    "endDate": "2014-01-21T23:28:28.350Z",
     "type": "SONG",
     "onairType": "NEXT",
     "properties" : [
@@ -35,8 +35,8 @@
 }    ]
 }, {
     "channelCode": "31",
-    "startDate": "2014-01-19T14:26:29.350Z",
-    "endDate": "2014-01-19T14:31:08.350Z",
+    "startDate": "2014-01-21T23:24:29.350Z",
+    "endDate": "2014-01-21T23:28:28.350Z",
     "type": "SONG",
     "onairType": "NOW",
     "properties" : [

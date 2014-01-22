@@ -65,6 +65,9 @@ var Progress = (function(){
 
         this.progressTimer = setInterval(function(){
             appModel.userModel.setProgress(appModel.userModel.progress += 1);
+            if(appModel.userModel.progress === UserModel.LISTENING_TARGET){
+                console.log("[UserModel] show form");
+            }
         },1000);
 
         $(this.view).on('tick', $.proxy( tick, this ));
@@ -82,7 +85,7 @@ var Progress = (function(){
     }
 
     function userProgressChangedHandler(){
-        self.progressTxt.text = appModel.userModel.progress + "/20000KM";
+        self.progressTxt.text = appModel.userModel.progress + "/"+ UserModel.LISTENING_TARGET +"KM";
     }
 
     function playerStatusChangedHandler(){

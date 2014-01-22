@@ -49,12 +49,13 @@ var AppModel = (function(){
 
     AppModel.prototype.getPlaylistHandler = function(data){
         self.playlist = data.list;
-        if(self.playlist.length>0){
+        console.log(data);
+        /*if(self.playlist.length>0){
             self.fetchNowAndNext();
         }
         else{
             console.log("[AppModel] nog geen playlist beschikbaar");
-        }
+        }*/
     };
 
     AppModel.prototype.fetchNowAndNext = function(){
@@ -76,6 +77,8 @@ var AppModel = (function(){
             song.title = data.onairs[k].properties[1].value;
             song.artist = data.onairs[k].properties[0].value;
             var startDate = new Date(data.onairs[k].startDate);
+            //var startDate = new Date();
+            console.log(startDate);
             var endDate = new Date(data.onairs[k].endDate);
             song.duration = (endDate.getTime() - startDate.getTime())/1000;
             console.log(song.duration);
@@ -241,6 +244,3 @@ var AppModel = (function(){
     return AppModel;
 
 })();
-
-
-AppModel.NEXT_SONGS_COUNT = 20;

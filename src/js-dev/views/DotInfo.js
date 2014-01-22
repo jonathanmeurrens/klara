@@ -52,6 +52,8 @@ var DotInfo = (function(){
         twButton.view.y = -25;
         twButton.view.addEventListener("click", function(e){
             console.log("[DotInfo] clicked on Twitter");
+            var url = "http://twitter.com/home?status=" + encodeURIComponent('I love Klara');
+            window.open(url,'_blank');
         });
 
         //console.log(this.titleTxt.getBounds().width);
