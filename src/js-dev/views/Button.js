@@ -21,7 +21,7 @@ var Button = (function(){
         this.view.regX = this.width/2;
         this.view.regY = this.height/2;
 
-        this.btn = new createjs.Bitmap(url);
+        this.btn = new createjs.Bitmap(preload.getResult(url));
         this.view.addChild(this.btn);
         this.btn.regX = this.width/2;
         this.btn.regY = this.height/2;

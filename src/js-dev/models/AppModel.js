@@ -20,13 +20,12 @@ var AppModel = (function(){
         self = this;
 
         // EVENT TYPES
-        AppModel.DATA_LOADED = "DATA_LOADED";
         AppModel.CURRENT_SONG_CHANGED = "CURRENT_SONG_CHANGED";
-        AppModel.ARTIST_INFO_LOADED = "ARTIST_INFO_LOADED";
-        AppModel.CURRENT_SONG_INFO_LOADED = "CURRENT_SONG_INFO_LOADED";
         AppModel.NOW_AND_NEXT_LOADED = "NOW_AND_NEXT_LOADED";
         AppModel.PLAYER_STATUS_CHANGED = "PLAYER_STATUS_CHANGED";
         AppModel.NEXT_SONG_CHANGED = "NEXT_SONG_CHANGED";
+        AppModel.CURRENT_PROGRAMMA_CHANGED = "CURRENT_PROGRAMMA_CHANGED";
+        AppModel.FLIGHT_ANGLE_CHANGED = "FLIGHT_ANGLE_CHANGED";
 
         this.currentSongIndex = null;
         this.userModel = new UserModel();
@@ -35,12 +34,39 @@ var AppModel = (function(){
         this.nextSong = null;
         this.loadingCount = 0;
         this.loadingProgress = 0;
+        this.currentProgramma = null;
+        this.flightAngle = 0;
     }
 
 
     /*
     ----------------------- API DATA
      */
+
+    AppModel.prototype.fetchProgramma = function(){
+        $.getJSON(Util.api + '/programma')
+            .done(this.fetchProgrammasHandler);
+    };
+
+    AppModel.prototype.fetchProgrammasHandler = function(data){
+        //self.programmas = data.list;
+        if(data.onairs[0].hasOwnProperty("now"))
+        {
+            console.log("[AppModel] programma now changed");
+            if(data.onairs[0].now.onAir){
+                self.currentProgramma = data.onairs[0].now;
+                bean.fire(self,AppModel.CURRENT_PROGRAMMA_CHANGED);
+                console.log(self.currentProgramma);
+            }
+        }
+        //console.log(data.onairs[0].now);
+        /*if(self.playlist.length>0){
+         self.fetchNowAndNext();
+         }
+         else{
+         console.log("[AppModel] nog geen playlist beschikbaar");
+         }*/
+    };
 
     AppModel.prototype.fetchPlaylist = function(){
         $.getJSON(Util.api + '/playlist')
@@ -78,10 +104,10 @@ var AppModel = (function(){
             song.artist = data.onairs[k].properties[0].value;
             var startDate = new Date(data.onairs[k].startDate);
             //var startDate = new Date();
-            console.log(startDate);
+            //console.log(startDate);
             var endDate = new Date(data.onairs[k].endDate);
             song.duration = (endDate.getTime() - startDate.getTime())/1000;
-            console.log(song.duration);
+            //console.log(song.duration);
 
             if(data.onairs[k].onairType === "NOW" && data.onairs[k].type ==="SONG")
             {
@@ -116,9 +142,13 @@ var AppModel = (function(){
             console.log("[AppModel] next wordt now");
             // next nummer in array word huidig nummer
             var currentSongIndex = self.userModel.songs.length - 1;
-            self.nextSong = nextSong;
-            self.userModel.songs.push(nextSong);
-            self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false); // fetch next song data
+            if(nextSong != null){ // als er een volgende nummer is
+                self.nextSong = nextSong;
+                self.userModel.songs.push(nextSong);
+                self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false); // fetch next song data
+            }else{
+                self.nextSong = null;
+            }
             self.setCurrentSongIndex(currentSongIndex);
         }
         // huidig nummer is gewijzigd
@@ -197,6 +227,7 @@ var AppModel = (function(){
                 if(isCurrentSong){
                     console.log("[AppModel] setCurrentIndex: "+index);
                     self.currentSongIndex = index;
+                    //self.setCurrentSongIndex(self.currentSongIndex);
                 }
 
                 self.loadingProgress++;
@@ -206,7 +237,12 @@ var AppModel = (function(){
                     if(appModel.userModel.songs.length >= self.currentSongIndex + 2){
                         self.nextSong = appModel.userModel.songs[self.currentSongIndex + 1];
                     }
-                    //console.log(self.currentSong, self.nextSong);
+                    console.log("[AppModel] loading done!!!!!!!!");
+                    //var temp = self.currentSongIndex;
+                    //self.currentSongIndex = -1;
+                    /*if(isCurrentSong){
+                        self.setCurrentSongIndex(index);
+                    }*/
                     bean.fire(self, AppModel.NOW_AND_NEXT_LOADED);
                 }
             }
@@ -238,6 +274,13 @@ var AppModel = (function(){
         if(status !== this.isPlaying){
             this.isPlaying = status;
             bean.fire(this,AppModel.PLAYER_STATUS_CHANGED);
+        }
+    };
+
+    AppModel.prototype.setFlightAngle = function(angle){
+        if(this.flightAngle !== angle){
+            this.flightAngle = angle;
+            bean.fire(this,AppModel.FLIGHT_ANGLE_CHANGED);
         }
     };
 

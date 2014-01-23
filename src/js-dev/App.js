@@ -14,10 +14,13 @@
 /* globals Progress:true */
 /* globals Player:true */
 /* globals TravelInfo:true */
+/* globals CurrentProgramma:true */
+/* globals Timeline:true */
+/* globals PreloadManager:true */
 
-var REFRESH_RATE = 20000;
+var REFRESH_RATE = 30000;
 
-var appModel, stage;
+var appModel, stage, preload;
 
 var App = (function(){
 
@@ -35,23 +38,37 @@ var App = (function(){
         createjs.Ticker.setFPS(60);
         createjs.Ticker.useRAF = true;
 
+        this.preloader = new PreloadManager();
+        bean.on(this.preloader,PreloadManager.LOADING_DONE, this.preloadingDoneHandler);
+        this.preloader.preloadApp();
+    }
+
+    App.prototype.preloadingDoneHandler = function(){
+
         appModel = new AppModel();
         appModel.fetchNowAndNext();
-        appModel.fetchPlaylist();
         setInterval(appModel.fetchNowAndNext,REFRESH_RATE);
 
         this.map = new MyMap();
         stage.addChild(this.map.view);
 
-        this.travelInfo = new TravelInfo();
-        stage.addChild(this.travelInfo.view);
+       /* this.travelInfo = new TravelInfo();
+        stage.addChild(this.travelInfo.view);*/
+
+        this.currentProgramma = new CurrentProgramma();
+        stage.addChild(this.currentProgramma.view);
 
         this.player = new Player();
         stage.addChild(this.player.view);
 
         this.progress = new Progress(70, 70);
         stage.addChild(this.progress.view);
-    }
+
+        this.timeline = new Timeline();
+        stage.addChild(this.timeline.view);
+
+        appModel.fetchProgramma();
+    };
 
     function tick(){
         stage.update();

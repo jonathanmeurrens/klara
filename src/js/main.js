@@ -23,7 +23,7 @@ var Button = (function(){
         this.view.regX = this.width/2;
         this.view.regY = this.height/2;
 
-        this.btn = new createjs.Bitmap(url);
+        this.btn = new createjs.Bitmap(preload.getResult(url));
         this.view.addChild(this.btn);
         this.btn.regX = this.width/2;
         this.btn.regY = this.height/2;
@@ -71,6 +71,74 @@ var CampaignScreen = (function(){
 /**
  * Created with JetBrains PhpStorm.
  * User: Jonathan
+ * Date: 21/01/14
+ * Time: 21:51
+ * To change this template use File | Settings | File Templates.
+ */
+
+/* globals appModel:true */
+/* globals AppModel:true */
+
+var CurrentProgramma = (function(){
+
+    var self;
+
+    function CurrentProgramma(){
+
+        self = this;
+
+        this.view = new createjs.Container();
+
+        this.programmaTitleTxt = new createjs.Text("","12px Arial", "#000000");
+        this.view.addChild(this.programmaTitleTxt);
+
+        this.programmaDescTxt = new createjs.Text("","10px Arial", "#000000");
+        this.programmaDescTxt.y = 20;
+        this.view.addChild(this.programmaDescTxt);
+
+        this.programmaPresentatorTxt = new createjs.Text("","10px Arial", "#000000");
+        this.programmaPresentatorTxt.y = 40;
+        this.view.addChild(this.programmaPresentatorTxt);
+
+        this.view.y = stage.canvas.height / 2;
+        this.view.x = stage.canvas.width / 2;
+
+        bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
+            if(appModel.nextSong == null){
+                // show programma info
+                self.view.alpha = 1;
+
+            }else{
+                // hide programma info
+                self.view.alpha = 0;
+            }
+            console.log("[CurrentProgramma] now and next loaded: " + appModel.nextSong);
+        });
+
+        bean.on(appModel, AppModel.CURRENT_PROGRAMMA_CHANGED, function(e){
+            console.log("[CurrentProgramma] programma changed: " + appModel.currentProgramma);
+            self.programmaTitleTxt.text = appModel.currentProgramma.title;
+            self.programmaDescTxt.text = appModel.currentProgramma.description;
+            self.programmaPresentatorTxt.text = appModel.currentProgramma.presenters[0].name;
+
+            if(appModel.userModel.songs.length - 1 === appModel.currentSongIndex){
+                // no next, so show programma
+                // show programma info
+                self.view.alpha = 1;
+            } else{
+                self.view.alpha = 0;
+            }
+
+        });
+    }
+
+    return CurrentProgramma;
+
+})();
+
+/**
+ * Created with JetBrains PhpStorm.
+ * User: Jonathan
  * Date: 14/01/14
  * Time: 19:30
  * To change this template use File | Settings | File Templates.
@@ -91,17 +159,35 @@ var Dot = (function(){
         this.songIndex = songIndex;
 
         this.view = new createjs.Container();
-        this.circle = new createjs.Shape();
-        this.circle.mouseEnabled = true;
-        this.circle.graphics.beginFill("#000000").drawCircle(0, 0, 1.5);
         this.view.x = stage.canvas.width / 2;
         this.view.y = stage.canvas.height / 2;
-        this.view.addChild(this.circle);
-        this.view.mouseEnabled = true;
 
-        this.circle.addEventListener("click",$.proxy( function(){
+        this.bullet = new createjs.Container();
+        this.view.addChild(this.bullet);
+
+        var outerCircle = new createjs.Shape();
+        outerCircle.graphics.beginFill("#000000").drawCircle(0, 0, 5);
+        outerCircle.alpha = 0.01;
+        this.bullet.addChild(outerCircle);
+
+        this.circle = new createjs.Shape();
+        this.circle.graphics.beginFill("#000000").drawCircle(0, 0, 1.5);
+        this.bullet.addChild(this.circle);
+
+        this.bullet.mouseEnabled = true;
+
+
+        this.bullet.addEventListener("click",$.proxy( function(){
             appModel.setCurrentSongIndex(this.songIndex);
         }, this ));
+
+        this.bullet.addEventListener("mouseover", $.proxy( function(e){
+            createjs.Tween.get(this.circle).to({scaleX:2, scaleY:2},  100);
+        }, this ));
+        this.bullet.addEventListener("mouseout", $.proxy( function(e){
+            createjs.Tween.get(this.circle).to({scaleX:1.0, scaleY:1.0},  100);
+        }, this ));
+
     }
 
     Dot.prototype.randomPosition = function(){
@@ -113,7 +199,7 @@ var Dot = (function(){
         var toX = stage.canvas.width / 2 - (((appModel.userModel.songs.length - (this.songIndex + 1))) * 150);
         var toY = stage.canvas.height / 2;
         var speed = 3000 + Math.random() * 3000;
-        this.circle.scaleX = this.circle.scaleY = 1;
+        this.bullet.scaleX = this.bullet.scaleY = 1;
         createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
     };
 
@@ -124,14 +210,14 @@ var Dot = (function(){
         this.view.alpha = 0;
         createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
 
-        this.circle.scaleX = this.circle.scaleY = 2.5;
+        this.bullet.scaleX = this.bullet.scaleY = 2.5;
     };
 
     Dot.prototype.showInfoView = function(){
         if(this.dotInfo == null){
             this.dotInfo = new DotInfo(appModel.userModel.songs[this.songIndex]);
             this.view.addChild(this.dotInfo.view);
-            //console.log("[Dot] show dot info");
+            this.bullet.scaleX = this.bullet.scaleY = 2.5;
         }
     };
 
@@ -139,7 +225,7 @@ var Dot = (function(){
         if(this.dotInfo != null){
             this.view.removeChild(this.dotInfo.view);
             this.dotInfo = null;
-            //console.log("[Dot] hide dot info");
+            this.bullet.scaleX = this.bullet.scaleY = 1;
         }
     };
 
@@ -156,43 +242,63 @@ var Dot = (function(){
  */
 
 /* globals Button:true */
-/* globals postOnFacebook:true */
+/* globals appModel:true */
 
 var DotInfo = (function(){
 
     function DotInfo(songInfo){
 
         this.view = new createjs.Container();
+
+        this.shadowShape = new createjs.Shape();
+        this.shadowShape.graphics.beginFill("#000000");
+        this.shadowShape.graphics.lineTo(0,0);
+        this.shadowShape.graphics.lineTo(60,-75);
+        this.shadowShape.graphics.lineTo(70,-75);
+        this.shadowShape.graphics.lineTo(70,-20);
+        this.shadowShape.graphics.endFill();
+        this.shadowShape.graphics.closePath();
+        this.shadowShape.alpha = 0.1;
+        this.view.addChild(this.shadowShape);
+        //this.shadowShape.scaleY = this.shadowShape.scaleX = 0.6;
+
         this.backgroundShape = new createjs.Shape();
         this.backgroundShape.graphics.beginFill("#000");
-        this.backgroundShape.graphics.setStrokeStyle(2);
         this.backgroundShape.graphics.lineTo(0,0);
-        this.backgroundShape.graphics.lineTo(50,-100);
+        this.backgroundShape.graphics.lineTo(30,-100);
         this.backgroundShape.graphics.lineTo(150,-100);
         this.backgroundShape.graphics.lineTo(150,-40);
         this.backgroundShape.graphics.endFill();
         this.backgroundShape.graphics.closePath();
         this.view.addChild(this.backgroundShape);
+        //this.backgroundShape.shadow = new createjs.Shadow("#bbbbbb", -2, -2, 40);
 
-        this.titleTxt = new createjs.Text(songInfo.title,"14px Arial", "#f5f5f5");
+        this.titleTxt = new createjs.Text(songInfo.title.toUpperCase(),"18px proxima_nova_extra_condenseLt", "#f5f5f5");
         this.titleTxt.y = -94;
-        this.titleTxt.x = 55;
         this.titleTxt.mask = this.backgroundShape;
         this.view.addChild(this.titleTxt);
+        this.titleTxt2 = new createjs.Text(songInfo.title.toUpperCase(),"18px proxima_nova_extra_condenseLt", "#f5f5f5");
+        this.titleTxt2.y = -94;
+        this.titleTxt2.mask = this.backgroundShape;
+        this.view.addChild(this.titleTxt2);
+        this.titleTxt.x = 55;
+        this.titleTxt2.x = this.titleTxt.x + this.titleTxt.getBounds().width;
 
-        this.artistTxt = new createjs.Text(songInfo.artist,"11px Arial", "#D5C502");
-        this.artistTxt.y = -72;
-        this.artistTxt.x = 43;
+        this.artistTxt = new createjs.Text(songInfo.artist.toUpperCase(),"12px orator_stdregular", "#D5C502");
+        this.artistTxt.y = -70;
+        this.artistTxt.x = 28;
         this.artistTxt.mask = this.backgroundShape;
+        if(this.artistTxt.text.length > 15){
+            this.artistTxt.text = this.artistTxt.text.substring(0, 15) + "...";
+        }
         this.view.addChild(this.artistTxt);
 
-        var fbButton = new Button(Button.FACEBOOK);
+       /* var fbButton = new Button(Button.FACEBOOK);
         this.view.addChild(fbButton.view);
         fbButton.view.x = 40;
         fbButton.view.y = 40;
         fbButton.view.addEventListener("click", function(e){
-            console.log("[DotInfo] clicked on Facebook");
-            postOnFacebook(200);
+            postOnFacebook(appModel.userModel.progress);
         });
 
         var twButton = new Button(Button.TWITTER);
@@ -200,20 +306,23 @@ var DotInfo = (function(){
         twButton.view.x = -20;
         twButton.view.y = -25;
         twButton.view.addEventListener("click", function(e){
-            console.log("[DotInfo] clicked on Twitter");
-            var url = "http://twitter.com/home?status=" + encodeURIComponent('I love Klara');
+            var url = "http://twitter.com/home?status= Ik reisde al " + appModel.userModel.progress + "km met Klara. Reis ook mee en WIN een reis!";
             window.open(url,'_blank');
-        });
+        });*/
 
         //console.log(this.titleTxt.getBounds().width);
 
-        //$(this.view).on('tick', $.proxy( tick, this ));
+        $(this.view).on('tick', $.proxy( tick, this ));
     }
 
     function tick(e){
         this.titleTxt.x -= 1;
-        if(this.titleTxt.x < - (this.titleTxt.getBounds().width - 45)){
-            this.titleTxt.x = this.titleTxt.getBounds().width + 55;
+        this.titleTxt2.x -= 1;
+        if(this.titleTxt.x < - (this.titleTxt.getBounds().width)){
+            this.titleTxt.x = this.titleTxt2.getBounds().x + this.titleTxt2.getBounds().width + 40;
+        }
+        if(this.titleTxt2.x < - (this.titleTxt2.getBounds().width)){
+            this.titleTxt2.x = this.titleTxt.x + this.titleTxt.getBounds().width + 40;
         }
     }
 
@@ -268,6 +377,7 @@ var MapLabel = (function(){
 /* globals Util:true */
 /* globals MarkerWithLabel:true */
 /* globals MapLabel:true */
+/* globals Particles:true */
 
 var MyMap = (function(){
 
@@ -282,20 +392,25 @@ var MyMap = (function(){
         this.mapWidth = 12000;
         this.mapHeight = 12000;
 
-        this.bg = new createjs.Shape();
+       /* this.bg = new createjs.Shape();
         this.bg.graphics.beginFill("#ffffff").drawRect(0,0, this.mapWidth, this.mapHeight);
         this.view.addChild(this.bg);
-
-        this.mapBg = new createjs.Bitmap("assets/geography-class6.png");
+*/
+        this.mapBg = new createjs.Bitmap(preload.getResult("worldmap"));
         this.view.addChild(this.mapBg);
 
         this.lines = new createjs.Graphics();
         var linesShape = new createjs.Shape(this.lines);
         this.view.addChild(linesShape);
 
+        /*this.particles = new Particles();
+        this.view.addChild(this.particles.view);*/
+
         this.plane = new createjs.Bitmap("assets/plane.png");
         this.plane.regX = this.plane.regY = 18/2;
         this.view.addChild(this.plane);
+
+        this.isAnimatingToCenter = false;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             console.log("[MyMap] loading done");
@@ -312,11 +427,15 @@ var MyMap = (function(){
 
             if(self.dots.length >= appModel.currentSongIndex + 2) // is there a next desination?
             {
+                createjs.Tween.removeTweens(self.plane);
+
                 var toX = self.dots[appModel.currentSongIndex + 1].view.x;
                 var toY = self.dots[appModel.currentSongIndex + 1].view.y;
 
-                console.log(calculateAngleFrom(startX, startY, toX, toY));
-                self.plane.rotation = - calculateAngleFrom(startX, startY, toX, toY) + 42;
+                //console.log(calculateAngleFrom(startX, startY, toX, toY));
+
+                self.plane.rotation = calculateAngleFrom(startX, startY, toX, toY) - 180;
+                appModel.setFlightAngle(calculateAngleFrom(startX, startY, toX, toY) - 180);
 
                 createjs.Tween.get(self.plane).to({
                     x: toX,
@@ -345,9 +464,7 @@ var MyMap = (function(){
     }
 
 
-
     MyMap.prototype.draw = function(){
-
         var length = this.dots.length;
         if(length < 0){
             length = 0;
@@ -374,26 +491,34 @@ var MyMap = (function(){
     }
 
     function centerMapAndShowInfoForDotWithIndex(index){
-        if(self.dots.length > 0){
+        console.log("[MyMap] center map: "+index);
+        if(!self.isAnimatingToCenter){
+            self.isAnimatingToCenter = true;
+            if(self.dots.length > 0){
 
-            if(index < 0){
-                // center on belgium
-                console.log("[MyMap] zoom out on map");
-                var pos = convertGeoToPixel(50.5333, 4.7667);
-                console.log(pos);
-                var toXpos = -pos.x + (stage.canvas.width/2);
-                var toYpos = -pos.y + (stage.canvas.height/2);
-                createjs.Tween.get(self.view).to({x: toXpos, y: toYpos}, 2000, createjs.Ease.cubicInOut);
-            }
-            else{
-                // center map
-                for(var i=0; i<self.dots.length; i++){
-                    self.dots[i].hideInfoView();
+                if(index < 0){
+                    // center on belgium
+                    console.log("[MyMap] zoom out on map");
+                    var pos = convertGeoToPixel(50.5333, 4.7667);
+                    console.log(pos);
+                    var toXpos = Math.round(-pos.x + (stage.canvas.width/2));
+                    var toYpos = Math.round(-pos.y + (stage.canvas.height/2));
+                    createjs.Tween.get(self.view).to({x: toXpos, y: toYpos}, 2000, createjs.Ease.cubicInOut).call(function(){
+                        self.isAnimatingToCenter = false;
+                    });
                 }
-                self.dots[index].showInfoView();
-                var toX = -self.dots[index].view.x + (stage.canvas.width/2);
-                var toY = -self.dots[index].view.y + (stage.canvas.height/2);
-                createjs.Tween.get(self.view).to({x: toX, y: toY}, 2000, createjs.Ease.cubicInOut);
+                else{
+                    // center map
+                    for(var i=0; i<self.dots.length; i++){
+                        self.dots[i].hideInfoView();
+                    }
+                    self.dots[index].showInfoView();
+                    var toX = Math.round(-self.dots[index].view.x + (stage.canvas.width/2));
+                    var toY = Math.round(-self.dots[index].view.y + (stage.canvas.height/2));
+                    createjs.Tween.get(self.view).to({x: toX, y: toY}, 2000, createjs.Ease.cubicInOut).call(function(){
+                        self.isAnimatingToCenter = false;
+                    });
+                }
             }
         }
     }
@@ -409,10 +534,10 @@ var MyMap = (function(){
     }
 
     function convertGeoToPixel(lat, lon){
-        var xPos = (lon+180) * (self.mapWidth/360);
+        var xPos = Math.round((lon+180) * (self.mapWidth/360));
         var latRad = lat * Math.PI/180;
         var mercN = Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
-        var yPos   = (self.mapHeight / 2) - (self.mapWidth * mercN / (2 * Math.PI));
+        var yPos   = Math.round((self.mapHeight / 2) - (self.mapWidth * mercN / (2 * Math.PI)));
         return {x: xPos, y: yPos};
     }
 
@@ -437,12 +562,27 @@ var MyMap = (function(){
 
 var Particles = (function(){
 
-    function Particle(){
+    function Particles(){
 
+        this.view = new createjs.Container();
+
+        this.shape = new createjs.Shape();
+        this.shape.graphics.setStrokeStyle(2);
+        this.shape.graphics.beginStroke("#000000");
+        this.shape.graphics.drawCircle(0,0,10);
+        this.shape.graphics.endStroke();
+
+        this.view.addChild(this.shape);
+        $(this.view).on('tick', $.proxy( tick, this ));
     }
 
     function tick(e){
-
+        this.shape.scaleX = this.shape.scaleY +=0.01;
+        this.shape.alpha -=0.03;
+        if(this.shape.scaleX >= 3){
+            this.shape.scaleX = this.shape.scaleY = 0;
+            this.shape.alpha = 1;
+        }
     }
 
     return Particles;
@@ -508,6 +648,8 @@ var Player = (function(){
 /* globals ScreenManager:true */
 /* globals AppModel:true */
 /* globals appModel:true */
+/* globals Button:true */
+/* globals postOnFacebook:true */
 
 var Progress = (function(){
 
@@ -519,17 +661,35 @@ var Progress = (function(){
 
         bean.on(appModel.userModel, UserModel.PROGRESS_CHANGED, userProgressChangedHandler);
         bean.on(appModel, AppModel.PLAYER_STATUS_CHANGED, playerStatusChangedHandler);
+        bean.on(appModel, AppModel.FLIGHT_ANGLE_CHANGED, flightAngleChangedHandler);
 
         this.view = new createjs.Container();
-        this.view.regX = this.view.regY = -65/2;
+        this.view.regX = this.view.regY = -64/2;
         this.view.x = xPos;
         this.view.y = yPos;
-        this.circle = new createjs.Shape();
-        this.circle.mouseEnabled = true;
-        this.circle.graphics.beginFill("#FFEA00").drawCircle(0, 0, 52);
-        this.view.addChild(this.circle);
-        this.circle.scaleX = this.circle.scaleY = 0;
-        createjs.Tween.get(this.circle).to({scaleX:1, scaleY: 1}, 1700, createjs.Ease.elasticOut);
+
+        var radius = stage.canvas.width + 64;
+        var graphicBg = new createjs.Graphics().
+            beginRadialGradientFill(
+                ["#ec008c","#b5006c"],
+                [0, 1],
+                stage.canvas.width/2,
+                stage.canvas.height/2,
+                0,
+                stage.canvas.width/2,
+                stage.canvas.height/2,
+                radius/3)
+            .drawCircle(0, 0, radius);
+        this.shapeBg = new createjs.Shape(graphicBg);
+        this.view.addChild(this.shapeBg);
+        this.shapeBg.scaleX = this.shapeBg.scaleY = 0;
+
+        this.app_title = new createjs.Bitmap(preload.getResult("app_title"));
+        this.app_title.regX = -60;
+        this.app_title.regY = 33;
+        this.app_title.alpha = 0;
+        this.view.addChild(this.app_title);
+        createjs.Tween.get(this.app_title).to({alpha:1}, 1000);
 
         this.borderCircle = new createjs.Shape();
         this.borderCircle.mouseEnabled = true;
@@ -538,23 +698,46 @@ var Progress = (function(){
         this.borderCircle.graphics.drawCircle(0, 0, 70);
         this.view.addChild(this.borderCircle);
         this.borderCircle.scaleX = this.borderCircle.scaleY = 0;
-        createjs.Tween.get(this.borderCircle).to({scaleX:1, scaleY: 1}, 1700, createjs.Ease.elasticOut).call(function(){
-            self.plane = new createjs.Bitmap("assets/plane.png");
-            self.plane.regX = 18/2;
-            self.plane.regY = 158/2;
-            self.view.addChild(self.plane);
-        });
 
-        this.logo = new createjs.Bitmap("assets/klara_logo.png");
-        this.logo.regX = 58/2;
-        this.logo.regY = 58/2;
+        this.logo_bg = new createjs.Bitmap(preload.getResult('logo_background'));
+        this.logo_bg.regX = 94/2;
+        this.logo_bg.regY = 94/2;
+        this.logo_bg.alpha = 0;
+        this.view.addChild(this.logo_bg);
+        createjs.Tween.get(this.logo_bg).to({alpha:1}, 1000);
+
+        this.compassOuter = new createjs.Bitmap(preload.getResult('compass-outer'));
+        this.compassOuter.regX = 152/2;
+        this.compassOuter.regY = 152/2;
+        this.compassOuter.alpha = 0;
+        this.view.addChild(this.compassOuter);
+        createjs.Tween.get(this.compassOuter).to({alpha:1}, 1000);
+
+        this.compassInner = new createjs.Bitmap(preload.getResult('compass-inner'));
+        this.compassInner.regX = 118/2;
+        this.compassInner.regY = 118/2;
+        this.compassInner.alpha = 0;
+        this.view.addChild(this.compassInner);
+        createjs.Tween.get(this.compassInner).to({alpha:1}, 1000);
+
+        this.indicator = new createjs.Bitmap(preload.getResult('compass-indicator'));
+        this.indicator.regX = -110/2;
+        this.indicator.regY = 4/2;
+        this.indicator.alpha = 0;
+        this.view.addChild(this.indicator);
+        createjs.Tween.get(this.indicator).to({alpha:1}, 1000);
+
+        this.logo = new createjs.Bitmap(preload.getResult('klara_logo'));
+        this.logo.regX = 52/2;
+        this.logo.regY = 56/2;
         this.logo.alpha = 0;
         this.view.addChild(this.logo);
         createjs.Tween.get(this.logo).to({alpha:1}, 1000);
 
-        this.progressTxt = new createjs.Text("","12px Arial", "#222222");
-        this.progressTxt.y = 0;
-        this.progressTxt.x = 88;
+        this.progressTxt = new createjs.Text("","12px orator_stdregular", "#222222");
+        this.progressTxt.y = -7;
+        this.progressTxt.x = 273;
+        this.progressTxt.textAlign = "right";
         this.view.addChild(this.progressTxt);
 
         this.isOpen = false;
@@ -568,15 +751,49 @@ var Progress = (function(){
             }
         },1000);
 
+        var fbButton = new Button(Button.FACEBOOK);
+        this.view.addChild(fbButton.view);
+        fbButton.view.x = 305;
+        fbButton.view.y = -11;
+        fbButton.view.addEventListener("click", function(e){
+            postOnFacebook(appModel.userModel.progress);
+        });
+
+        var twButton = new Button(Button.TWITTER);
+        this.view.addChild(twButton.view);
+        twButton.view.x = fbButton.view.x + 30;
+        twButton.view.y = -11;
+        twButton.view.addEventListener("click", function(e){
+            var url = "http://twitter.com/home?status= Ik reisde al " + appModel.userModel.progress + "km met Klara. Reis ook mee en WIN een reis!";
+            window.open(url,'_blank');
+        });
+
         $(this.view).on('tick', $.proxy( tick, this ));
+
+        //doIndicatorAnimations();
+        //doInnerCompassAnimations();
+    }
+
+    function flightAngleChangedHandler(){
+        createjs.Tween.removeTweens(self.indicator);
+        doIndicatorAnimations(appModel.flightAngle);
+    }
+
+    function doIndicatorAnimations(){
+        var angle = appModel.flightAngle - 180;
+        createjs.Tween.get(self.indicator).to({rotation: 15 + angle - Math.random() * 15}, 1000 + Math.random(), createjs.Tween.cubicInOut).call(doIndicatorAnimations);
+    }
+
+    function doInnerCompassAnimations(){
+        createjs.Tween.get(self.compassInner).to({rotation:Math.random()*360}, 4000 + Math.random()*2000).call(doInnerCompassAnimations);
     }
 
     function clickHandler(){
         if(!this.isOpen){
-            createjs.Tween.get(this.circle).to({scaleX:35, scaleY: 35}, 500);
+            createjs.Tween.get(this.shapeBg).to({scaleX:1, scaleY: 1}, 500);
             ScreenManager.showScreen(ScreenManager.CAMPAIGN_INFO);
         }else{
-            createjs.Tween.get(this.circle).to({scaleX:1, scaleY: 1}, 500, createjs.Ease.easeOut);
+            createjs.Tween.get(this.shapeBg).to({scaleX:0, scaleY: 0}, 500, createjs.Ease.easeOut);
             ScreenManager.removeCurrentScreen();
         }
         this.isOpen = !this.isOpen;
@@ -601,9 +818,634 @@ var Progress = (function(){
         if(this.plane != null){
             this.plane.rotation -= 0.5;
         }
+        //this.compassInner.rotation += 0.1;
+        //this.indicator.rotation -= 0.1;
     }
 
     return Progress;
+
+})();
+
+var SlideAthene = (function()
+{
+
+    var self;
+
+    function SlideAthene()
+    {
+        self = this;
+
+        this.view = new createjs.Container();
+
+        this.line = new createjs.Graphics();
+        var lineShape = new createjs.Shape(this.line);
+        this.view.addChild(lineShape);
+        this.line.clear();
+
+        this.circleS = new createjs.Shape();
+        this.circleS.graphics.beginFill("black").drawCircle(0,0,2);
+        this.circleS.x = Math.floor(window.innerWidth/2-101);
+        this.circleS.y = Math.floor(window.innerHeight/2+147);
+        this.circleS.alpha = 0;
+        this.view.addChild(this.circleS);
+
+        this.circleE = new createjs.Shape();
+        this.circleE.graphics.beginFill("black").drawCircle(0,0,2);
+        this.circleE.x = Math.floor(window.innerWidth/2-100);
+        this.circleE.y = Math.floor(window.innerHeight/2+146);
+        this.view.addChild(this.circleE);
+
+        this.logo = new createjs.Bitmap("img/logo.png");
+        this.logo.width = 239;
+        this.logo.height = 249;
+        this.logo.x = window.innerWidth/2-this.logo.width/2;
+        this.logo.y = window.innerHeight/2-this.logo.height/2;
+        this.view.addChild(this.logo);
+
+        this.airport = new createjs.Bitmap("img/airport.png");
+        this.airport.x = Math.floor(window.innerWidth/2+156+17);
+        this.airport.y = Math.floor(window.innerHeight/2-56+17);
+        this.airport.scaleX = this.airport.scaleY = 0;
+        this.airport.regX = this.airport.regY = 17;
+        this.view.addChild(this.airport);
+
+        this.label = new createjs.Bitmap("img/athene_label.png");
+        this.label.x = Math.floor(window.innerWidth/2+174);
+        this.label.y = Math.floor(window.innerHeight/2-71+29);
+        this.label.regY = 29;
+        this.label.rotation = 15;
+        this.label.alpha = 0;
+        this.view.addChild(this.label);
+
+        this.image = new createjs.Bitmap("img/athene_image.png");
+        this.image.x = Math.floor(window.innerWidth/2+50);
+        this.image.y = Math.floor(window.innerHeight/2-124);
+        this.image.alpha = 0;
+        this.view.addChild(this.image);
+
+        this.plane = new createjs.Bitmap("img/plane.png");
+        this.plane.x = Math.floor(window.innerWidth/2-50);
+        this.plane.y = Math.floor(window.innerHeight/2-84);
+        this.plane.alpha = 0;
+        this.view.addChild(this.plane);
+
+        this.map = new createjs.Bitmap("img/athene_map.png");
+        this.map.x = Math.floor(window.innerWidth/2-210);
+        this.map.y = Math.floor(window.innerHeight/2-86);
+        this.map.alpha = 0;
+        this.view.addChild(this.map);
+
+        this.twitter = new createjs.Bitmap("img/twitter.png");
+        this.twitter.x = Math.floor(window.innerWidth/2-93+11);
+        this.twitter.y = Math.floor(window.innerHeight/2+141+11);
+        this.twitter.scaleX = this.twitter.scaleY = 0.5;
+        this.twitter.regX = this.twitter.regY = 11;
+        this.twitter.alpha = 0;
+        this.view.addChild(this.twitter);
+
+        this.facebook = new createjs.Bitmap("img/facebook.png");
+        this.facebook.x = Math.floor(window.innerWidth/2-111+11);
+        this.facebook.y = Math.floor(window.innerHeight/2+118+11);
+        this.facebook.scaleX = this.facebook.scaleY = 0.5;
+        this.facebook.regX = this.facebook.regY = 11;
+        this.facebook.alpha = 0;
+        this.view.addChild(this.facebook);
+
+        this.tip = new createjs.Bitmap("img/tip.png");
+        this.tip.width = 279;
+        this.tip.height = 54;
+        this.tip.x = Math.floor(window.innerWidth/2+150);
+        this.tip.y = Math.floor(window.innerHeight/2-this.tip.height/2+5);
+        this.tip.alpha = 0;
+        this.view.addChild(this.tip);
+    }
+
+    SlideAthene.prototype.animateIn = function()
+    {
+        $(this.view).on("tick", $.proxy(tick, this));
+
+        createjs.Tween.get(this.facebook).wait(800).to({scaleX:1, scaleY:1, alpha:1}, 600, createjs.Ease.elasticOut);
+        createjs.Tween.get(this.twitter).wait(1000).to({scaleX:1, scaleY:1, alpha:1}, 600, createjs.Ease.elasticOut);
+
+        createjs.Tween.get(this.map).to({alpha:1}, 2000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.tip).to({x:Math.floor(window.innerWidth/2-this.tip.width/2), alpha:1}, 3000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.image).to({x:Math.floor(window.innerWidth/2-119), alpha:1}, 3000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.plane).to({x: Math.floor(window.innerWidth/2+155), alpha:1}, 3000, createjs.Ease.cubicOut).call(function(){self.animateOut();});
+
+        createjs.Tween.get(this.circleE).to({x: Math.floor(window.innerWidth/2+174), y: Math.floor(window.innerHeight/2-39)}, 1000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.airport).wait(1000).to({scaleX:1, scaleY:1}, 1000, createjs.Ease.elasticOut);
+        createjs.Tween.get(this.label).wait(1500).to({rotation:0, alpha:1}, 1000, createjs.Ease.elasticOut);
+    };
+
+    SlideAthene.prototype.animateOut = function()
+    {
+        createjs.Tween.get(this.facebook).wait(800).to({scaleX:0.5, scaleY:0.5, alpha:0}, 200, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.twitter).wait(1000).to({scaleX:0.5, scaleY:0.5, alpha:0}, 300, createjs.Ease.cubicIn);
+
+        createjs.Tween.get(this.map).wait(1000).to({alpha:0}, 2000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.tip).to({x: Math.floor(window.innerWidth/2-this.tip.width/2-150), alpha:0}, 2000, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.image).to({x: Math.floor(window.innerWidth/2-200), alpha:0}, 2000, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.plane).to({x: Math.floor(window.innerWidth/2+350), alpha:0}, 2000, createjs.Ease.cubicIn).call(function(){
+            self.view.removeAllChildren();
+            stage.dispatchEvent("NEXT_SLIDE");
+        });
+
+        createjs.Tween.get(this.circleE).wait(1050).to({x: Math.floor(window.innerWidth/2-101), y: Math.floor(window.innerHeight/2+147), alpha: 0}, 500, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.airport).wait(450).to({scaleX:0, scaleY:0}, 600, createjs.Ease.elasticIn);
+        createjs.Tween.get(this.label).wait(200).to({rotation:20, alpha:0}, 250, createjs.Ease.cubicIn);
+    };
+
+    function tick()
+    {
+        if(this.line){
+            this.line.clear();
+        }
+        this.line.setStrokeStyle(0.8);
+        this.line.beginStroke("black");
+        this.line.moveTo(window.innerWidth/2-101, window.innerHeight/2+147);
+        this.line.lineTo(this.circleE.x, this.circleE.y);
+        if(this.circleE.x === this.circleS.x){
+            this.line.clear();
+        }
+    }
+
+    return SlideAthene;
+
+})();
+
+var SlideNewyork = (function()
+{
+
+    var self;
+
+    function SlideNewyork()
+    {
+        self = this;
+
+        this.view = new createjs.Container();
+
+        this.line = new createjs.Graphics();
+        var lineShape = new createjs.Shape(this.line);
+        this.view.addChild(lineShape);
+
+        this.circleS = new createjs.Shape();
+        this.circleS.graphics.beginFill("black").drawCircle(0,0,2);
+        this.circleS.x = Math.floor(window.innerWidth/2+185);
+        this.circleS.y = Math.floor(window.innerHeight/2+79);
+        this.circleS.alpha = 0;
+        this.view.addChild(this.circleS);
+
+        this.circleE = new createjs.Shape();
+        this.circleE.graphics.beginFill("black").drawCircle(0,0,2);
+        this.circleE.x = Math.floor(window.innerWidth/2+184);
+        this.circleE.y = Math.floor(window.innerHeight/2+78);
+        this.view.addChild(this.circleE);
+
+        this.logo = new createjs.Bitmap("img/logo.png");
+        this.logo.width = 239;
+        this.logo.height = 249;
+        this.logo.x = window.innerWidth/2-this.logo.width/2;
+        this.logo.y = window.innerHeight/2-this.logo.height/2;
+        this.view.addChild(this.logo);
+
+        this.airport = new createjs.Bitmap("img/airport.png");
+        this.airport.x = Math.floor(window.innerWidth/2-90+17);
+        this.airport.y = Math.floor(window.innerHeight/2-178+17);
+        this.airport.scaleX = this.airport.scaleY = 0;
+        this.airport.regX = this.airport.regY = 17;
+        this.view.addChild(this.airport);
+
+        this.label = new createjs.Bitmap("img/newyork_label.png");
+        this.label.x = Math.floor(window.innerWidth/2-72);
+        this.label.y = Math.floor(window.innerHeight/2-189+26);
+        this.label.regY = 26;
+        this.label.rotation = 15;
+        this.label.alpha = 0;
+        this.view.addChild(this.label);
+
+        this.plane = new createjs.Bitmap("img/plane.png");
+        this.plane.x = Math.floor(window.innerWidth/2-300);
+        this.plane.y = Math.floor(window.innerHeight/2-202);
+        this.plane.alpha = 0;
+        this.view.addChild(this.plane);
+
+        this.image = new createjs.Bitmap("img/newyork_image.png");
+        this.image.width = 239;
+        this.image.height = 249;
+        this.image.x = Math.floor(window.innerWidth/2+50);
+        this.image.y = Math.floor(window.innerHeight/2-this.image.height/2);
+        this.image.alpha = 0;
+        this.view.addChild(this.image);
+
+        this.map = new createjs.Bitmap("img/newyork_map.png");
+        this.map.x = Math.floor(window.innerWidth/2-140);
+        this.map.y = Math.floor(window.innerHeight/2-167);
+        this.map.alpha = 0;
+        this.view.addChild(this.map);
+
+        this.twitter = new createjs.Bitmap("img/twitter.png");
+        this.twitter.x = Math.floor(window.innerWidth/2+154+11);
+        this.twitter.y = Math.floor(window.innerHeight/2+71+11);
+        this.twitter.scaleX = this.twitter.scaleY = 0.5;
+        this.twitter.regX = this.twitter.regY = 11;
+        this.twitter.alpha = 0;
+        this.view.addChild(this.twitter);
+
+        this.facebook = new createjs.Bitmap("img/facebook.png");
+        this.facebook.x = Math.floor(window.innerWidth/2+174+11);
+        this.facebook.y = Math.floor(window.innerHeight/2+48+11);
+        this.facebook.scaleX = this.facebook.scaleY = 0.5;
+        this.facebook.regX = this.facebook.regY = 11;
+        this.facebook.alpha = 0;
+        this.view.addChild(this.facebook);
+
+        this.tip = new createjs.Bitmap("img/tip.png");
+        this.tip.width = 279;
+        this.tip.height = 54;
+        this.tip.x = Math.floor(window.innerWidth/2+150);
+        this.tip.y = Math.floor(window.innerHeight/2-this.tip.height/2+5);
+        this.tip.alpha = 0;
+        this.view.addChild(this.tip);
+    }
+
+    SlideNewyork.prototype.animateIn = function()
+    {
+        $(this.view).on("tick", $.proxy(tick, this));
+
+        createjs.Tween.get(this.facebook).wait(800).to({scaleX:1, scaleY:1, alpha:1}, 600, createjs.Ease.elasticOut);
+        createjs.Tween.get(this.twitter).wait(1000).to({scaleX:1, scaleY:1, alpha:1}, 600, createjs.Ease.elasticOut);
+
+        createjs.Tween.get(this.map).to({alpha:1}, 2000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.tip).to({x:Math.floor(window.innerWidth/2-this.tip.width/2), alpha:1}, 3000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.image).to({x:Math.floor(window.innerWidth/2-this.image.width/2), alpha:1}, 3000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.plane).to({x: Math.floor(window.innerWidth/2-92), alpha:1}, 3000, createjs.Ease.cubicOut).call(function(){self.animateOut();});
+
+        createjs.Tween.get(this.circleE).to({x: Math.floor(window.innerWidth/2-72), y: Math.floor(window.innerHeight/2-160)}, 1000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.airport).wait(1000).to({scaleX:1, scaleY:1}, 1000, createjs.Ease.elasticOut);
+        createjs.Tween.get(this.label).wait(1500).to({rotation:0, alpha:1}, 1000, createjs.Ease.elasticOut);
+    };
+
+    SlideNewyork.prototype.animateOut = function()
+    {
+        createjs.Tween.get(this.facebook).wait(800).to({scaleX:0.5, scaleY:0.5, alpha:0}, 200, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.twitter).wait(1000).to({scaleX:0.5, scaleY:0.5, alpha:0}, 300, createjs.Ease.cubicIn);
+
+        createjs.Tween.get(this.map).wait(1000).to({alpha:0}, 2000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.tip).to({x: Math.floor(window.innerWidth/2-this.tip.width/2-150), alpha:0}, 2000, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.image).to({x: Math.floor(window.innerWidth/2-this.image.width/2-100), alpha:0}, 2000, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.plane).to({x:Math.floor(window.innerWidth/2+100), alpha:0}, 2000, createjs.Ease.cubicIn).call(function(){
+            self.view.removeAllChildren();
+            stage.dispatchEvent("NEXT_SLIDE");
+        });
+
+        createjs.Tween.get(this.circleE).wait(1050).to({x: Math.floor(window.innerWidth/2+185), y: Math.floor(window.innerHeight/2+79), alpha: 0}, 500, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.airport).wait(450).to({scaleX:0, scaleY:0}, 600, createjs.Ease.elasticIn);
+        createjs.Tween.get(this.label).wait(200).to({rotation:20, alpha:0}, 250, createjs.Ease.cubicIn);
+    };
+
+    function tick()
+    {
+        if(this.line) {
+            this.line.clear();
+        }
+        this.line.setStrokeStyle(0.8);
+        this.line.beginStroke("black");
+        this.line.moveTo(window.innerWidth/2+185, window.innerHeight/2+79);
+        this.line.lineTo(this.circleE.x, this.circleE.y);
+        if(this.circleE.x === this.circleS.x) {
+            this.line.clear();
+        }
+    }
+
+    return SlideNewyork;
+
+})();
+
+var SlideWenen = (function()
+{
+
+    var self;
+
+    function SlideWenen()
+    {
+        self = this;
+
+        this.view = new createjs.Container();
+
+        this.line = new createjs.Graphics();
+        var lineShape = new createjs.Shape(this.line);
+        this.view.addChild(lineShape);
+        this.line.clear();
+
+        this.circleS = new createjs.Shape();
+        this.circleS.graphics.beginFill("black").drawCircle(0,0,2);
+        this.circleS.x = Math.floor(window.innerWidth/2+191);
+        this.circleS.y = Math.floor(window.innerHeight/2+120);
+        this.circleS.alpha = 0;
+        this.view.addChild(this.circleS);
+
+        this.circleE = new createjs.Shape();
+        this.circleE.graphics.beginFill("black").drawCircle(0,0,2);
+        this.circleE.x = Math.floor(window.innerWidth/2+190);
+        this.circleE.y = Math.floor(window.innerHeight/2+119);
+        this.view.addChild(this.circleE);
+
+        this.logo = new createjs.Bitmap("img/logo.png");
+        this.logo.width = 239;
+        this.logo.height = 249;
+        this.logo.x = window.innerWidth/2-this.logo.width/2;
+        this.logo.y = window.innerHeight/2-this.logo.height/2;
+        this.view.addChild(this.logo);
+
+        this.airport = new createjs.Bitmap("img/airport.png");
+        this.airport.x = Math.floor(window.innerWidth/2-209+17);
+        this.airport.y = Math.floor(window.innerHeight/2-62+17);
+        this.airport.scaleX = this.airport.scaleY = 0;
+        this.airport.regX = this.airport.regY = 17;
+        this.view.addChild(this.airport);
+
+        this.label = new createjs.Bitmap("img/wenen_label.png");
+        this.label.x = Math.floor(window.innerWidth/2-191);
+        this.label.y = Math.floor(window.innerHeight/2-80+32);
+        this.label.regY = 32;
+        this.label.rotation = 15;
+        this.label.alpha = 0;
+        this.view.addChild(this.label);
+
+        this.plane = new createjs.Bitmap("img/plane.png");
+        this.plane.x = Math.floor(window.innerWidth/2-400);
+        this.plane.y = Math.floor(window.innerHeight/2-94);
+        this.plane.alpha = 0;
+        this.view.addChild(this.plane);
+
+        this.image = new createjs.Bitmap("img/wenen_image.png");
+        this.image.x = Math.floor(window.innerWidth/2+50);
+        this.image.y = Math.floor(window.innerHeight/2-3);
+        this.image.alpha = 0;
+        this.view.addChild(this.image);
+
+        this.map = new createjs.Bitmap("img/wenen_map.png");
+        this.map.x = Math.floor(window.innerWidth/2-240);
+        this.map.y = Math.floor(window.innerHeight/2-117);
+        this.map.alpha = 0;
+        this.view.addChild(this.map);
+
+        this.twitter = new createjs.Bitmap("img/twitter.png");
+        this.twitter.x = Math.floor(window.innerWidth/2+161+11);
+        this.twitter.y = Math.floor(window.innerHeight/2+118+11);
+        this.twitter.scaleX = this.twitter.scaleY = 0.5;
+        this.twitter.regX = this.twitter.regY = 11;
+        this.twitter.alpha = 0;
+        this.view.addChild(this.twitter);
+
+        this.facebook = new createjs.Bitmap("img/facebook.png");
+        this.facebook.x = Math.floor(window.innerWidth/2+174+11);
+        this.facebook.y = Math.floor(window.innerHeight/2+91+11);
+        this.facebook.scaleX = this.facebook.scaleY = 0.5;
+        this.facebook.regX = this.facebook.regY = 11;
+        this.facebook.alpha = 0;
+        this.view.addChild(this.facebook);
+
+        this.tip = new createjs.Bitmap("img/tip.png");
+        this.tip.width = 279;
+        this.tip.height = 54;
+        this.tip.x = Math.floor(window.innerWidth/2+150);
+        this.tip.y = Math.floor(window.innerHeight/2-this.tip.height/2+5);
+        this.tip.alpha = 0;
+        this.view.addChild(this.tip);
+    }
+
+    SlideWenen.prototype.animateIn = function()
+    {
+        $(this.view).on("tick", $.proxy(tick, this));
+
+        createjs.Tween.get(this.facebook).wait(800).to({scaleX:1, scaleY:1, alpha:1}, 600, createjs.Ease.elasticOut);
+        createjs.Tween.get(this.twitter).wait(1000).to({scaleX:1, scaleY:1, alpha:1}, 600, createjs.Ease.elasticOut);
+
+        createjs.Tween.get(this.map).to({alpha:1}, 2000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.tip).to({x:Math.floor(window.innerWidth/2-this.tip.width/2), alpha:1}, 3000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.image).to({x:Math.floor(window.innerWidth/2-9), alpha:1}, 3000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.plane).to({x: Math.floor(window.innerWidth/2-210), alpha:1}, 3000, createjs.Ease.cubicOut).call(function(){self.animateOut();});
+
+        createjs.Tween.get(this.circleE).to({x: Math.floor(window.innerWidth/2-191), y: Math.floor(window.innerHeight/2-45)}, 1000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.airport).wait(1000).to({scaleX:1, scaleY:1}, 1000, createjs.Ease.elasticOut);
+        createjs.Tween.get(this.label).wait(1500).to({rotation:0, alpha:1}, 1000, createjs.Ease.elasticOut);
+    };
+
+    SlideWenen.prototype.animateOut = function()
+    {
+        createjs.Tween.get(this.facebook).wait(800).to({scaleX:0.5, scaleY:0.5, alpha:0}, 200, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.twitter).wait(1000).to({scaleX:0.5, scaleY:0.5, alpha:0}, 300, createjs.Ease.cubicIn);
+
+        createjs.Tween.get(this.map).wait(1000).to({alpha:0}, 2000, createjs.Ease.cubicOut);
+        createjs.Tween.get(this.tip).to({x: Math.floor(window.innerWidth/2-this.tip.width/2-150), alpha:0}, 2000, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.image).to({x: Math.floor(window.innerWidth/2-100), alpha:0}, 2000, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.plane).to({x: Math.floor(window.innerWidth/2+50), alpha:0}, 2000, createjs.Ease.cubicIn).call(function(){
+            self.view.removeAllChildren();
+            stage.dispatchEvent("NEXT_SLIDE");
+        });
+
+        createjs.Tween.get(this.circleE).wait(1050).to({x: Math.floor(window.innerWidth/2+191), y: Math.floor(window.innerHeight/2+120), alpha: 0}, 500, createjs.Ease.cubicIn);
+        createjs.Tween.get(this.airport).wait(450).to({scaleX:0, scaleY:0}, 600, createjs.Ease.elasticIn);
+        createjs.Tween.get(this.label).wait(200).to({rotation:20, alpha:0}, 250, createjs.Ease.cubicIn);
+    };
+
+    function tick()
+    {
+        if(this.line) {
+            this.line.clear();
+        }
+        this.line.setStrokeStyle(0.8);
+        this.line.beginStroke("black");
+        this.line.moveTo(window.innerWidth/2+191, window.innerHeight/2+120);
+        this.line.lineTo(this.circleE.x, this.circleE.y);
+        if(this.circleE.x === this.circleS.x) {
+            this.line.clear();
+        }
+    }
+
+    return SlideWenen;
+
+})();
+
+/* globals SlideNewyork:true */
+/* globals SlideWenen:true */
+/* globals SlideAthene:true */
+
+
+var Slideshow = (function()
+{
+
+    var self;
+
+    function Slideshow()
+    {
+        self = this;
+
+        this.currentSlide = 1;
+        this.line = new createjs.Shape();
+        this.view = new createjs.Container();
+
+        this.bg = new createjs.Shape();
+        this.bg.graphics.beginFill("#ec008c");
+        this.bg.graphics.drawRect(0,0,window.innerWidth,window.innerHeight);
+        this.bg.graphics.endFill();
+        this.view.addChild(this.bg);
+
+        this.menuNewyork = new createjs.Text("reis naar new york", "normal 14px Arial", "#fff");
+        this.menuNewyork.addEventListener("click", self.changeSlideHandler);
+        this.menuNewyork.x = window.innerWidth/2-400-this.menuNewyork.getBounds().width/2;
+        this.menuNewyork.y = window.innerHeight-50;
+        this.view.addChild(this.menuNewyork);
+
+        this.menuWenen = new createjs.Text("reis naar wenen", "normal 14px Arial", "#fff");
+        this.menuWenen.addEventListener("click", self.changeSlideHandler);
+        this.menuWenen.x = window.innerWidth/2-this.menuWenen.getBounds().width/2;
+        this.menuWenen.y = window.innerHeight-50;
+        this.view.addChild(this.menuWenen);
+
+        this.menuAthene = new createjs.Text("reis naar athene", "normal 14px Arial", "#fff");
+        this.menuAthene.addEventListener("click", self.changeSlideHandler);
+        this.menuAthene.x = window.innerWidth/2+400-this.menuAthene.getBounds().width/2;
+        this.menuAthene.y = window.innerHeight-50;
+        this.view.addChild(this.menuAthene);
+
+        this.menuNewyork.cursor = this.menuWenen.cursor = this.menuAthene.cursor = "pointer";
+
+        this.nextSlideHandler();
+    }
+
+    Slideshow.prototype.changeSlideHandler = function(e)
+    {
+        switch(e.currentTarget.text)
+        {
+            case "reis naar new york":
+                self.currentSlide = 1;
+                break;
+            case "reis naar wenen":
+                self.currentSlide = 2;
+                break;
+            case "reis naar athene":
+                self.currentSlide = 3;
+                break;
+        }
+    };
+
+    Slideshow.prototype.nextSlideHandler = function()
+    {
+        switch(self.currentSlide)
+        {
+            case 1:
+                var slideNewyork = new SlideNewyork();
+                self.view.addChild(slideNewyork.view);
+                slideNewyork.animateIn();
+                lineHandler(self.menuNewyork);
+                self.currentSlide++;
+                break;
+            case 2:
+                var slideWenen = new SlideWenen();
+                self.view.addChild(slideWenen.view);
+                slideWenen.animateIn();
+                lineHandler(self.menuWenen);
+                self.currentSlide++;
+                break;
+            case 3:
+                var slideAthene = new SlideAthene();
+                self.view.addChild(slideAthene.view);
+                slideAthene.animateIn();
+                lineHandler(self.menuAthene);
+                self.currentSlide = 1;
+                break;
+        }
+    };
+
+    function lineHandler(item)
+    {
+        if(self.line){
+            self.line.graphics.clear();
+        }
+        self.line.graphics.beginFill("#fff");
+        self.line.graphics.drawRect(item.x,item.y + 12,item.getBounds().width,1);
+        self.line.graphics.endFill();
+        self.view.addChild(self.line);
+    }
+
+    return Slideshow;
+
+})();
+
+/**
+ * Created with JetBrains PhpStorm.
+ * User: Jonathan
+ * Date: 14/01/14
+ * Time: 19:30
+ * To change this template use File | Settings | File Templates.
+ */
+
+/* globals Util:true */
+/* globals DotInfo:true */
+/* globals appModel:true */
+/* globals AppModel:true */
+/* globals TimelineDot:true */
+/* globals TravelInfo:true */
+
+var Timeline = (function(){
+
+    var self;
+
+    function Timeline(){
+
+        self = this;
+
+        this.view = new createjs.Container();
+        this.dots = [];
+        this.view.y = stage.canvas.height - 60;
+
+        this.lines = new createjs.Graphics();
+        var linesShape = new createjs.Shape(this.lines);
+        this.view.addChild(linesShape);
+
+        this.travelInfo = new TravelInfo();
+        this.view.addChild(this.travelInfo.view);
+
+        this.luggageIcon = new createjs.Bitmap(preload.getResult("luggage_icon"));
+        this.view.addChild(this.luggageIcon);
+        this.luggageIcon.x = stage.canvas.width - 80;
+        this.luggageIcon.y = -15;
+        this.luggageIcon.alpha = 0;
+
+
+        bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e)
+        {
+            self.lines.clear();
+            self.lines.setStrokeStyle(0.3);
+            self.lines.beginStroke(createjs.Graphics.getRGB(180,180,180));
+
+            for(var i = self.dots.length; i < appModel.userModel.songs.length - 2; i++){
+
+                var timelineDot = new TimelineDot(i);
+
+                timelineDot.view.x = stage.canvas.width - (100 + i * 25);
+                timelineDot.view.y = 0;
+                self.view.addChild(timelineDot.view);
+                console.log(stage.canvas.width - (50 + i * 25));
+                self.dots.push(timelineDot);
+            }
+
+
+            if(self.dots.length > 0){
+                self.lines.moveTo(self.dots[0].view.x + 30, self.dots[0].view.y );
+                self.lines.lineTo(self.dots[self.dots.length - 1].view.x, self.dots[self.dots.length - 1].view.y);
+
+                createjs.Tween.get(self.travelInfo.view).to({y:-70},800, createjs.Tween.cubicInOut  );
+                createjs.Tween.get(self.luggageIcon).to({alpha:1, y:-6},400, createjs.Tween.cubicInOut  );
+            }/*else{
+                createjs.Tween.get(self.travelInfo.view).to({y:0}, 800);
+            }*/
+        });
+    }
+
+    return Timeline;
 
 })();
 
@@ -619,20 +1461,51 @@ var Progress = (function(){
 /* globals DotInfo:true */
 /* globals appModel:true */
 
-var Timeline = (function(){
+var TimelineDot = (function(){
 
-    function Timeline(){
+    function TimelineDot(songIndex){
+        //_.bindAll(this);
+
+        // EVENT TYPES
+        TimelineDot.CLICKED = "CLICKED";
+
+        this.songIndex = songIndex;
 
         this.view = new createjs.Container();
         this.circle = new createjs.Shape();
         this.circle.mouseEnabled = true;
-        this.circle.graphics.beginFill("#000").drawCircle(0, 0, 1.5);
-        this.view.x = stage.canvas.width / 2;
-        this.view.y = stage.canvas.height / 2;
+        this.circle.graphics.beginFill("#000000").drawCircle(0, 0, 2);
+
+        this.countryTxt = new createjs.Text(appModel.userModel.songs[songIndex].location,"10px Arial","#000000");
+        //this.view.addChild(this.countryTxt);
+
+        /*this.view.x = stage.canvas.width / 2;
+        this.view.y = stage.canvas.height / 2;*/
         this.view.addChild(this.circle);
+        this.view.mouseEnabled = true;
+
+        this.circle.addEventListener("click",$.proxy( function(){
+            appModel.setCurrentSongIndex(this.songIndex);
+        }, this ));
     }
 
-    return Timeline;
+   /* TimelineDot.prototype.showInfoView = function(){
+        if(this.dotInfo == null){
+            this.dotInfo = new DotInfo(appModel.userModel.songs[this.songIndex]);
+            this.view.addChild(this.dotInfo.view);
+            //console.log("[Dot] show dot info");
+        }
+    };
+
+    TimelineDot.prototype.hideInfoView = function(){
+        if(this.dotInfo != null){
+            this.view.removeChild(this.dotInfo.view);
+            this.dotInfo = null;
+            //console.log("[Dot] hide dot info");
+        }
+    };*/
+
+    return TimelineDot;
 
 })();
 
@@ -657,21 +1530,43 @@ var TravelInfo = (function(){
 
         this.view = new createjs.Container();
 
-        this.nextDestinationTxt = new createjs.Text("","12px Arial", "#000000");
+        this.background = new createjs.Shape();
+        this.background.graphics.beginFill("#ffd600");
+        this.background.graphics.drawRect(0,0,0, 20);
+        this.background.graphics.endFill();
+        this.view.addChild(this.background);
+
+        this.nextDestinationTxt = new createjs.Text("","12px orator_stdregular", "#000000");
         this.view.addChild(this.nextDestinationTxt);
+        this.nextDestinationTxt.x = 0;
+        this.nextDestinationTxt.y = 0;
+        this.nextDestinationTxt.textAlign = "right";
 
-        this.nextTitleTxt = new createjs.Text("","10px Arial", "#000000");
-        this.nextTitleTxt.y = 20;
+        this.nextTitleTxt = new createjs.Text("","12px orator_stdregular", "#000000");
+        this.nextTitleTxt.y = 22;
+        this.nextTitleTxt.x = 4;
         this.view.addChild(this.nextTitleTxt);
+        this.nextTitleTxt.textAlign = "right";
 
-        this.view.y = stage.canvas.height - 80;
-        this.view.x = 40;
+        this.background.y = this.nextTitleTxt.y;
+
+        this.view.y = -40;
+        this.view.x = stage.canvas.width - 80;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             if(appModel.nextSong != null){
-                self.nextDestinationTxt.text = "next destination: " + appModel.nextSong.location;
-                self.nextTitleTxt.text = appModel.nextSong.title;
-                console.log("[TravelInfo] update info",appModel.nextSong.location);
+                self.nextDestinationTxt.text = "volgende bestemming: " + appModel.nextSong.location;
+                var title = appModel.nextSong.title + ", " + appModel.nextSong.artist;
+                if(title.length > 34){
+                    title = title.substr(0, 40);
+                    title += "...";
+                }
+                self.nextTitleTxt.text = title;
+
+                self.background.graphics.clear();
+                self.background.graphics.beginFill("#ffd600");
+                self.background.graphics.drawRect(-self.nextTitleTxt.getBounds().width,0,self.nextTitleTxt.getBounds().width + 8, 18);
+                self.background.graphics.endFill();
             }
         });
     }
@@ -706,6 +1601,85 @@ AudioManager.togglePlay = function(){
 AudioManager.stop = function(){
     AudioManager.player.stop();
 };
+
+/* globals stage:true  */
+
+var PreloadManager = (function(){
+
+    var self;
+
+    function PreloadManager(){
+        self = this;
+
+        PreloadManager.LOADING_DONE = "LOADING_DONE";
+
+        this.isPreloadingApp = false;
+        this.view = new createjs.Container();
+
+        preload = new createjs.LoadQueue();
+        preload.installPlugin(createjs.Sound);
+        preload.addEventListener("progress", self.handleProgress);
+        preload.addEventListener("complete", self.handleComplete);
+        preload.addEventListener("fileload", self.handleFileLoad);
+
+        this.preloaderView = new createjs.Container();
+        this.progressTxt = new createjs.Text("","12 Arial", "#000000");
+        this.preloaderView.addChild(this.progressTxt);
+        this.progressTxt.x = stage.canvas.width / 2;
+        this.progressTxt.y = stage.canvas.height / 2;
+
+        this.removePreloaderTimeout = null;
+    }
+
+    PreloadManager.prototype.preloadApp = function(){
+        showPreloader();
+        self.isPreloadingApp = true;
+        var manifest = [
+            {src:"assets/klara_logo.png", id:"klara_logo"},
+            {src:"assets/logo_background.png", id:"logo_background"},
+            {src:"assets/worldmap3.png", id:"worldmap"},
+            {src:"assets/buttons/facebook.png"},
+            {src:"assets/buttons/twitter.png"},
+            {src:"assets/buttons/play_pause.png"},
+            {src:"assets/compass-indicator.png", id:"compass-indicator"},
+            {src:"assets/compass-outer.png", id:"compass-outer"},
+            {src:"assets/compass-inner.png", id:"compass-inner"},
+            {src:"assets/title_app.png", id:"app_title"},
+            {src:"assets/luggage_icon.png", id:"luggage_icon"}
+        ];
+        //createjs.Sound.alternateExtensions = ["mp3"];
+        preload.loadManifest(manifest, true);
+    };
+
+    PreloadManager.prototype.handleProgress = function(event) {
+        console.log(event.loaded);
+        self.progressTxt.text = event.loaded + "%";
+    };
+
+    PreloadManager.prototype.handleFileLoad = function(event) {
+        console.log(event);
+    };
+
+    PreloadManager.prototype.handleComplete = function(e) {
+        removePreloader();
+        bean.fire(self,PreloadManager.LOADING_DONE);
+    };
+
+    PreloadManager.prototype.handleError = function(event){
+        console.log("[StartScreen] error preload!"+event);
+    };
+
+    function showPreloader(){
+        stage.addChild(self.preloaderView);
+    }
+
+    function removePreloader(){
+        stage.removeChild(self.preloaderView);
+    }
+
+    return PreloadManager;
+
+})();
 
 /**
  * Created with JetBrains PhpStorm.
@@ -762,13 +1736,12 @@ var AppModel = (function(){
         self = this;
 
         // EVENT TYPES
-        AppModel.DATA_LOADED = "DATA_LOADED";
         AppModel.CURRENT_SONG_CHANGED = "CURRENT_SONG_CHANGED";
-        AppModel.ARTIST_INFO_LOADED = "ARTIST_INFO_LOADED";
-        AppModel.CURRENT_SONG_INFO_LOADED = "CURRENT_SONG_INFO_LOADED";
         AppModel.NOW_AND_NEXT_LOADED = "NOW_AND_NEXT_LOADED";
         AppModel.PLAYER_STATUS_CHANGED = "PLAYER_STATUS_CHANGED";
         AppModel.NEXT_SONG_CHANGED = "NEXT_SONG_CHANGED";
+        AppModel.CURRENT_PROGRAMMA_CHANGED = "CURRENT_PROGRAMMA_CHANGED";
+        AppModel.FLIGHT_ANGLE_CHANGED = "FLIGHT_ANGLE_CHANGED";
 
         this.currentSongIndex = null;
         this.userModel = new UserModel();
@@ -777,12 +1750,39 @@ var AppModel = (function(){
         this.nextSong = null;
         this.loadingCount = 0;
         this.loadingProgress = 0;
+        this.currentProgramma = null;
+        this.flightAngle = 0;
     }
 
 
     /*
     ----------------------- API DATA
      */
+
+    AppModel.prototype.fetchProgramma = function(){
+        $.getJSON(Util.api + '/programma')
+            .done(this.fetchProgrammasHandler);
+    };
+
+    AppModel.prototype.fetchProgrammasHandler = function(data){
+        //self.programmas = data.list;
+        if(data.onairs[0].hasOwnProperty("now"))
+        {
+            console.log("[AppModel] programma now changed");
+            if(data.onairs[0].now.onAir){
+                self.currentProgramma = data.onairs[0].now;
+                bean.fire(self,AppModel.CURRENT_PROGRAMMA_CHANGED);
+                console.log(self.currentProgramma);
+            }
+        }
+        //console.log(data.onairs[0].now);
+        /*if(self.playlist.length>0){
+         self.fetchNowAndNext();
+         }
+         else{
+         console.log("[AppModel] nog geen playlist beschikbaar");
+         }*/
+    };
 
     AppModel.prototype.fetchPlaylist = function(){
         $.getJSON(Util.api + '/playlist')
@@ -820,10 +1820,10 @@ var AppModel = (function(){
             song.artist = data.onairs[k].properties[0].value;
             var startDate = new Date(data.onairs[k].startDate);
             //var startDate = new Date();
-            console.log(startDate);
+            //console.log(startDate);
             var endDate = new Date(data.onairs[k].endDate);
             song.duration = (endDate.getTime() - startDate.getTime())/1000;
-            console.log(song.duration);
+            //console.log(song.duration);
 
             if(data.onairs[k].onairType === "NOW" && data.onairs[k].type ==="SONG")
             {
@@ -858,9 +1858,13 @@ var AppModel = (function(){
             console.log("[AppModel] next wordt now");
             // next nummer in array word huidig nummer
             var currentSongIndex = self.userModel.songs.length - 1;
-            self.nextSong = nextSong;
-            self.userModel.songs.push(nextSong);
-            self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false); // fetch next song data
+            if(nextSong != null){ // als er een volgende nummer is
+                self.nextSong = nextSong;
+                self.userModel.songs.push(nextSong);
+                self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false); // fetch next song data
+            }else{
+                self.nextSong = null;
+            }
             self.setCurrentSongIndex(currentSongIndex);
         }
         // huidig nummer is gewijzigd
@@ -939,6 +1943,7 @@ var AppModel = (function(){
                 if(isCurrentSong){
                     console.log("[AppModel] setCurrentIndex: "+index);
                     self.currentSongIndex = index;
+                    //self.setCurrentSongIndex(self.currentSongIndex);
                 }
 
                 self.loadingProgress++;
@@ -948,7 +1953,12 @@ var AppModel = (function(){
                     if(appModel.userModel.songs.length >= self.currentSongIndex + 2){
                         self.nextSong = appModel.userModel.songs[self.currentSongIndex + 1];
                     }
-                    //console.log(self.currentSong, self.nextSong);
+                    console.log("[AppModel] loading done!!!!!!!!");
+                    //var temp = self.currentSongIndex;
+                    //self.currentSongIndex = -1;
+                    /*if(isCurrentSong){
+                        self.setCurrentSongIndex(index);
+                    }*/
                     bean.fire(self, AppModel.NOW_AND_NEXT_LOADED);
                 }
             }
@@ -983,6 +1993,13 @@ var AppModel = (function(){
         }
     };
 
+    AppModel.prototype.setFlightAngle = function(angle){
+        if(this.flightAngle !== angle){
+            this.flightAngle = angle;
+            bean.fire(this,AppModel.FLIGHT_ANGLE_CHANGED);
+        }
+    };
+
     return AppModel;
 
 })();
@@ -1012,7 +2029,7 @@ var UserModel = (function(){
 
         UserModel.COOKIE_NAME = "KLARA_REIS";
         UserModel.PROGRESS_CHANGED = "PROGRESS_CHANGED";
-        UserModel.LISTENING_TARGET = 20000;
+        UserModel.LISTENING_TARGET = 14400;
 
         this.progress = 0;
         this.songs = [];
@@ -1103,9 +2120,9 @@ function postOnFacebook(afstand){
             display:'popup',
             message: '',
             name: 'Klara',
-            caption: 'Ik ontdek muziek met Klara',
+            caption: 'WIN ook een reis met klara.be',
             description: (
-                'I got '+ afstand
+                'Ik reisde '+ afstand + 'km met klara.be. Reis ook de wereld rond en WIN!'
                 ),
             link: 'http://klara.be',
             picture: 'http://images.uncyc.org/nl/a/a6/Logo_Klara.jpg'
@@ -1149,10 +2166,13 @@ var Util = (function(){
 /* globals Progress:true */
 /* globals Player:true */
 /* globals TravelInfo:true */
+/* globals CurrentProgramma:true */
+/* globals Timeline:true */
+/* globals PreloadManager:true */
 
-var REFRESH_RATE = 20000;
+var REFRESH_RATE = 30000;
 
-var appModel, stage;
+var appModel, stage, preload;
 
 var App = (function(){
 
@@ -1170,23 +2190,37 @@ var App = (function(){
         createjs.Ticker.setFPS(60);
         createjs.Ticker.useRAF = true;
 
+        this.preloader = new PreloadManager();
+        bean.on(this.preloader,PreloadManager.LOADING_DONE, this.preloadingDoneHandler);
+        this.preloader.preloadApp();
+    }
+
+    App.prototype.preloadingDoneHandler = function(){
+
         appModel = new AppModel();
         appModel.fetchNowAndNext();
-        appModel.fetchPlaylist();
         setInterval(appModel.fetchNowAndNext,REFRESH_RATE);
 
         this.map = new MyMap();
         stage.addChild(this.map.view);
 
-        this.travelInfo = new TravelInfo();
-        stage.addChild(this.travelInfo.view);
+       /* this.travelInfo = new TravelInfo();
+        stage.addChild(this.travelInfo.view);*/
+
+        this.currentProgramma = new CurrentProgramma();
+        stage.addChild(this.currentProgramma.view);
 
         this.player = new Player();
         stage.addChild(this.player.view);
 
         this.progress = new Progress(70, 70);
         stage.addChild(this.progress.view);
-    }
+
+        this.timeline = new Timeline();
+        stage.addChild(this.timeline.view);
+
+        appModel.fetchProgramma();
+    };
 
     function tick(){
         stage.update();

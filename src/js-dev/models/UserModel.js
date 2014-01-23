@@ -6,7 +6,7 @@ var UserModel = (function(){
 
         UserModel.COOKIE_NAME = "KLARA_REIS";
         UserModel.PROGRESS_CHANGED = "PROGRESS_CHANGED";
-        UserModel.LISTENING_TARGET = 20000;
+        UserModel.LISTENING_TARGET = 14400;
 
         this.progress = 0;
         this.songs = [];

@@ -132,7 +132,8 @@ module.exports = function(grunt) {
               _:true,
               bean:true,
               createjs:true,
-              stage:true
+              stage:true,
+              preload:true
           },
         },
         files:{

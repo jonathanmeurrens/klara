@@ -21,17 +21,35 @@ var Dot = (function(){
         this.songIndex = songIndex;
 
         this.view = new createjs.Container();
-        this.circle = new createjs.Shape();
-        this.circle.mouseEnabled = true;
-        this.circle.graphics.beginFill("#000000").drawCircle(0, 0, 1.5);
         this.view.x = stage.canvas.width / 2;
         this.view.y = stage.canvas.height / 2;
-        this.view.addChild(this.circle);
-        this.view.mouseEnabled = true;
 
-        this.circle.addEventListener("click",$.proxy( function(){
+        this.bullet = new createjs.Container();
+        this.view.addChild(this.bullet);
+
+        var outerCircle = new createjs.Shape();
+        outerCircle.graphics.beginFill("#000000").drawCircle(0, 0, 5);
+        outerCircle.alpha = 0.01;
+        this.bullet.addChild(outerCircle);
+
+        this.circle = new createjs.Shape();
+        this.circle.graphics.beginFill("#000000").drawCircle(0, 0, 1.5);
+        this.bullet.addChild(this.circle);
+
+        this.bullet.mouseEnabled = true;
+
+
+        this.bullet.addEventListener("click",$.proxy( function(){
             appModel.setCurrentSongIndex(this.songIndex);
         }, this ));
+
+        this.bullet.addEventListener("mouseover", $.proxy( function(e){
+            createjs.Tween.get(this.circle).to({scaleX:2, scaleY:2},  100);
+        }, this ));
+        this.bullet.addEventListener("mouseout", $.proxy( function(e){
+            createjs.Tween.get(this.circle).to({scaleX:1.0, scaleY:1.0},  100);
+        }, this ));
+
     }
 
     Dot.prototype.randomPosition = function(){
@@ -43,7 +61,7 @@ var Dot = (function(){
         var toX = stage.canvas.width / 2 - (((appModel.userModel.songs.length - (this.songIndex + 1))) * 150);
         var toY = stage.canvas.height / 2;
         var speed = 3000 + Math.random() * 3000;
-        this.circle.scaleX = this.circle.scaleY = 1;
+        this.bullet.scaleX = this.bullet.scaleY = 1;
         createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
     };
 
@@ -54,14 +72,14 @@ var Dot = (function(){
         this.view.alpha = 0;
         createjs.Tween.get(this.view).to({x:toX, y:toY, alpha:1}, speed, createjs.Ease.elasticOut);
 
-        this.circle.scaleX = this.circle.scaleY = 2.5;
+        this.bullet.scaleX = this.bullet.scaleY = 2.5;
     };
 
     Dot.prototype.showInfoView = function(){
         if(this.dotInfo == null){
             this.dotInfo = new DotInfo(appModel.userModel.songs[this.songIndex]);
             this.view.addChild(this.dotInfo.view);
-            //console.log("[Dot] show dot info");
+            this.bullet.scaleX = this.bullet.scaleY = 2.5;
         }
     };
 
@@ -69,7 +87,7 @@ var Dot = (function(){
         if(this.dotInfo != null){
             this.view.removeChild(this.dotInfo.view);
             this.dotInfo = null;
-            //console.log("[Dot] hide dot info");
+            this.bullet.scaleX = this.bullet.scaleY = 1;
         }
     };
 

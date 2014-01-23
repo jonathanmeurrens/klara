@@ -21,14 +21,14 @@
     "startDate": "2014-01-21T23:24:29.350Z",
     "endDate": "2014-01-21T23:28:28.350Z",
     "type": "SONG",
-    "onairType": "NEXT",
+    "onairType": "NOW",
     "properties" : [
 		{
     		"key" : "ARTISTNAME",
-    		"value"  : "Michel"
+    		"value"  : "Celine Dion"
 },		{
     		"key" : "TITLE",
-    		"value"  : "Test12 Tannhäuser: Blick' ich umher in diesem edlen Kreise"
+    		"value"  : "Test4 Tannhäuser: Blick' ich umher in diesem edlen Kreise"
 },		{
     		"key" : "COMPOSER",
     		"value"  : "Richard Wagner"
@@ -38,14 +38,14 @@
     "startDate": "2014-01-21T23:24:29.350Z",
     "endDate": "2014-01-21T23:28:28.350Z",
     "type": "SONG",
-    "onairType": "NOW",
+    "onairType": "NEXT",
     "properties" : [
         {
             "key" : "ARTISTNAME",
-            "value"  : "Stromae"
+            "value"  : "Bach"
 },      {
             "key" : "TITLE",
-            "value"  : "18 pianostukken: 2.Menuet - 4.Wals"
+            "value"  : "35 pianostukken: 2.Menuet - 4.Wals"
 },      {
             "key" : "COMPOSER",
             "value"  : "Herman Meulemans"

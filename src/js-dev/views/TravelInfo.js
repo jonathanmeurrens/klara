@@ -19,21 +19,43 @@ var TravelInfo = (function(){
 
         this.view = new createjs.Container();
 
-        this.nextDestinationTxt = new createjs.Text("","12px Arial", "#000000");
+        this.background = new createjs.Shape();
+        this.background.graphics.beginFill("#ffd600");
+        this.background.graphics.drawRect(0,0,0, 20);
+        this.background.graphics.endFill();
+        this.view.addChild(this.background);
+
+        this.nextDestinationTxt = new createjs.Text("","12px orator_stdregular", "#000000");
         this.view.addChild(this.nextDestinationTxt);
+        this.nextDestinationTxt.x = 0;
+        this.nextDestinationTxt.y = 0;
+        this.nextDestinationTxt.textAlign = "right";
 
-        this.nextTitleTxt = new createjs.Text("","10px Arial", "#000000");
-        this.nextTitleTxt.y = 20;
+        this.nextTitleTxt = new createjs.Text("","12px orator_stdregular", "#000000");
+        this.nextTitleTxt.y = 22;
+        this.nextTitleTxt.x = 4;
         this.view.addChild(this.nextTitleTxt);
+        this.nextTitleTxt.textAlign = "right";
 
-        this.view.y = stage.canvas.height - 80;
-        this.view.x = 40;
+        this.background.y = this.nextTitleTxt.y;
+
+        this.view.y = -40;
+        this.view.x = stage.canvas.width - 80;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             if(appModel.nextSong != null){
-                self.nextDestinationTxt.text = "next destination: " + appModel.nextSong.location;
-                self.nextTitleTxt.text = appModel.nextSong.title;
-                console.log("[TravelInfo] update info",appModel.nextSong.location);
+                self.nextDestinationTxt.text = "volgende bestemming: " + appModel.nextSong.location;
+                var title = appModel.nextSong.title + ", " + appModel.nextSong.artist;
+                if(title.length > 34){
+                    title = title.substr(0, 40);
+                    title += "...";
+                }
+                self.nextTitleTxt.text = title;
+
+                self.background.graphics.clear();
+                self.background.graphics.beginFill("#ffd600");
+                self.background.graphics.drawRect(-self.nextTitleTxt.getBounds().width,0,self.nextTitleTxt.getBounds().width + 8, 18);
+                self.background.graphics.endFill();
             }
         });
     }

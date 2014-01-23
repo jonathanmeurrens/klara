@@ -35,9 +35,9 @@ function postOnFacebook(afstand){
             display:'popup',
             message: '',
             name: 'Klara',
-            caption: 'Ik ontdek muziek met Klara',
+            caption: 'WIN ook een reis met klara.be',
             description: (
-                'I got '+ afstand
+                'Ik reisde '+ afstand + 'km met klara.be. Reis ook de wereld rond en WIN!'
                 ),
             link: 'http://klara.be',
             picture: 'http://images.uncyc.org/nl/a/a6/Logo_Klara.jpg'

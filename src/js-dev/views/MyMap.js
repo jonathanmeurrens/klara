@@ -13,6 +13,7 @@
 /* globals Util:true */
 /* globals MarkerWithLabel:true */
 /* globals MapLabel:true */
+/* globals Particles:true */
 
 var MyMap = (function(){
 
@@ -27,20 +28,25 @@ var MyMap = (function(){
         this.mapWidth = 12000;
         this.mapHeight = 12000;
 
-        this.bg = new createjs.Shape();
+       /* this.bg = new createjs.Shape();
         this.bg.graphics.beginFill("#ffffff").drawRect(0,0, this.mapWidth, this.mapHeight);
         this.view.addChild(this.bg);
-
-        this.mapBg = new createjs.Bitmap("assets/geography-class6.png");
+*/
+        this.mapBg = new createjs.Bitmap(preload.getResult("worldmap"));
         this.view.addChild(this.mapBg);
 
         this.lines = new createjs.Graphics();
         var linesShape = new createjs.Shape(this.lines);
         this.view.addChild(linesShape);
 
+        /*this.particles = new Particles();
+        this.view.addChild(this.particles.view);*/
+
         this.plane = new createjs.Bitmap("assets/plane.png");
         this.plane.regX = this.plane.regY = 18/2;
         this.view.addChild(this.plane);
+
+        this.isAnimatingToCenter = false;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             console.log("[MyMap] loading done");
@@ -57,11 +63,15 @@ var MyMap = (function(){
 
             if(self.dots.length >= appModel.currentSongIndex + 2) // is there a next desination?
             {
+                createjs.Tween.removeTweens(self.plane);
+
                 var toX = self.dots[appModel.currentSongIndex + 1].view.x;
                 var toY = self.dots[appModel.currentSongIndex + 1].view.y;
 
-                console.log(calculateAngleFrom(startX, startY, toX, toY));
-                self.plane.rotation = - calculateAngleFrom(startX, startY, toX, toY) + 42;
+                //console.log(calculateAngleFrom(startX, startY, toX, toY));
+
+                self.plane.rotation = calculateAngleFrom(startX, startY, toX, toY) - 180;
+                appModel.setFlightAngle(calculateAngleFrom(startX, startY, toX, toY) - 180);
 
                 createjs.Tween.get(self.plane).to({
                     x: toX,
@@ -90,9 +100,7 @@ var MyMap = (function(){
     }
 
 
-
     MyMap.prototype.draw = function(){
-
         var length = this.dots.length;
         if(length < 0){
             length = 0;
@@ -119,26 +127,34 @@ var MyMap = (function(){
     }
 
     function centerMapAndShowInfoForDotWithIndex(index){
-        if(self.dots.length > 0){
+        console.log("[MyMap] center map: "+index);
+        if(!self.isAnimatingToCenter){
+            self.isAnimatingToCenter = true;
+            if(self.dots.length > 0){
 
-            if(index < 0){
-                // center on belgium
-                console.log("[MyMap] zoom out on map");
-                var pos = convertGeoToPixel(50.5333, 4.7667);
-                console.log(pos);
-                var toXpos = -pos.x + (stage.canvas.width/2);
-                var toYpos = -pos.y + (stage.canvas.height/2);
-                createjs.Tween.get(self.view).to({x: toXpos, y: toYpos}, 2000, createjs.Ease.cubicInOut);
-            }
-            else{
-                // center map
-                for(var i=0; i<self.dots.length; i++){
-                    self.dots[i].hideInfoView();
+                if(index < 0){
+                    // center on belgium
+                    console.log("[MyMap] zoom out on map");
+                    var pos = convertGeoToPixel(50.5333, 4.7667);
+                    console.log(pos);
+                    var toXpos = Math.round(-pos.x + (stage.canvas.width/2));
+                    var toYpos = Math.round(-pos.y + (stage.canvas.height/2));
+                    createjs.Tween.get(self.view).to({x: toXpos, y: toYpos}, 2000, createjs.Ease.cubicInOut).call(function(){
+                        self.isAnimatingToCenter = false;
+                    });
                 }
-                self.dots[index].showInfoView();
-                var toX = -self.dots[index].view.x + (stage.canvas.width/2);
-                var toY = -self.dots[index].view.y + (stage.canvas.height/2);
-                createjs.Tween.get(self.view).to({x: toX, y: toY}, 2000, createjs.Ease.cubicInOut);
+                else{
+                    // center map
+                    for(var i=0; i<self.dots.length; i++){
+                        self.dots[i].hideInfoView();
+                    }
+                    self.dots[index].showInfoView();
+                    var toX = Math.round(-self.dots[index].view.x + (stage.canvas.width/2));
+                    var toY = Math.round(-self.dots[index].view.y + (stage.canvas.height/2));
+                    createjs.Tween.get(self.view).to({x: toX, y: toY}, 2000, createjs.Ease.cubicInOut).call(function(){
+                        self.isAnimatingToCenter = false;
+                    });
+                }
             }
         }
     }
@@ -154,10 +170,10 @@ var MyMap = (function(){
     }
 
     function convertGeoToPixel(lat, lon){
-        var xPos = (lon+180) * (self.mapWidth/360);
+        var xPos = Math.round((lon+180) * (self.mapWidth/360));
         var latRad = lat * Math.PI/180;
         var mercN = Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
-        var yPos   = (self.mapHeight / 2) - (self.mapWidth * mercN / (2 * Math.PI));
+        var yPos   = Math.round((self.mapHeight / 2) - (self.mapWidth * mercN / (2 * Math.PI)));
         return {x: xPos, y: yPos};
     }
 
