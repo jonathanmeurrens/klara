@@ -55,17 +55,17 @@ var App = (function(){
        /* this.travelInfo = new TravelInfo();
         stage.addChild(this.travelInfo.view);*/
 
-        this.currentProgramma = new CurrentProgramma();
-        stage.addChild(this.currentProgramma.view);
+        /*this.currentProgramma = new CurrentProgramma();
+        stage.addChild(this.currentProgramma.view);*/
 
-        this.player = new Player();
-        stage.addChild(this.player.view);
-
-        this.progress = new Progress(70, 70);
-        stage.addChild(this.progress.view);
+        /*this.player = new Player();
+        stage.addChild(this.player.view);*/
 
         this.timeline = new Timeline();
         stage.addChild(this.timeline.view);
+
+        this.progress = new Progress(70, 70);
+        stage.addChild(this.progress.view);
 
         appModel.fetchProgramma();
     };

@@ -19,19 +19,31 @@ var CurrentProgramma = (function(){
 
         this.view = new createjs.Container();
 
-        this.programmaTitleTxt = new createjs.Text("","12px Arial", "#000000");
+        this.background = new createjs.Shape();
+        this.background.graphics.beginFill("#ffd600");
+        this.background.graphics.drawRect(0,0,0, 20);
+        this.background.graphics.endFill();
+        this.view.addChild(this.background);
+
+        this.programmaTitleTxt = new createjs.Text("","10px orator_stdregular", "#000000");
+        this.programmaTitleTxt.textAlign = "right";
         this.view.addChild(this.programmaTitleTxt);
 
-        this.programmaDescTxt = new createjs.Text("","10px Arial", "#000000");
+        this.programmaDescTxt = new createjs.Text("","12px orator_stdregular", "#000000");
         this.programmaDescTxt.y = 20;
+        this.programmaDescTxt.textAlign = "right";
+        this.programmaDescTxt.lineWidth = 300;
+        this.programmaDescTxt.textBaseline = "top";
+        this.programmaDescTxt.lineHeight = 14;
         this.view.addChild(this.programmaDescTxt);
 
-        this.programmaPresentatorTxt = new createjs.Text("","10px Arial", "#000000");
-        this.programmaPresentatorTxt.y = 40;
-        this.view.addChild(this.programmaPresentatorTxt);
+        this.programmaPresentatorTxt = new createjs.Text("","12px orator_stdregular", "#000000");
+        this.programmaPresentatorTxt.y = 0;
+        this.programmaPresentatorTxt.textAlign = "right";
+        //this.view.addChild(this.programmaPresentatorTxt);
 
-        this.view.y = stage.canvas.height / 2;
-        this.view.x = stage.canvas.width / 2;
+        this.view.y = -50;
+        //this.view.x = stage.canvas.width / 2;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             if(appModel.nextSong == null){
@@ -47,9 +59,17 @@ var CurrentProgramma = (function(){
 
         bean.on(appModel, AppModel.CURRENT_PROGRAMMA_CHANGED, function(e){
             console.log("[CurrentProgramma] programma changed: " + appModel.currentProgramma);
-            self.programmaTitleTxt.text = appModel.currentProgramma.title;
-            self.programmaDescTxt.text = appModel.currentProgramma.description;
-            self.programmaPresentatorTxt.text = appModel.currentProgramma.presenters[0].name;
+            self.programmaTitleTxt.text = appModel.currentProgramma.title.toUpperCase();
+
+            self.background.graphics.clear();
+            self.background.graphics.beginFill("#ffd600");
+            self.background.graphics.drawRect(-self.programmaTitleTxt.getMeasuredWidth() - 11,-2,self.programmaTitleTxt.getMeasuredWidth() + 14, 18);
+            self.background.graphics.endFill();
+
+            var txt = appModel.currentProgramma.description;
+            ///txt = txt.slice(0,50) + "\n" + txt.slice(50);
+            self.programmaDescTxt.text = txt;
+           // self.programmaPresentatorTxt.text = appModel.currentProgramma.presenters[0].name;
 
             if(appModel.userModel.songs.length - 1 === appModel.currentSongIndex){
                 // no next, so show programma

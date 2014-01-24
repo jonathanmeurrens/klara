@@ -25,6 +25,7 @@ ScreenManager.showScreen = function(screenType){
 
 ScreenManager.removeCurrentScreen = function(){
     if(ScreenManager.currentScreen != null){
+        ScreenManager.currentScreen.willBeRemoved();
         stage.removeChild(ScreenManager.currentScreen.view);
         ScreenManager.currentScreen = null;
     }

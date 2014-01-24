@@ -47,7 +47,7 @@ var DotInfo = (function(){
         this.titleTxt2.mask = this.backgroundShape;
         this.view.addChild(this.titleTxt2);
         this.titleTxt.x = 55;
-        this.titleTxt2.x = this.titleTxt.x + this.titleTxt.getBounds().width;
+        this.titleTxt2.x = this.titleTxt.x + this.titleTxt.getMeasuredWidth();
 
         this.artistTxt = new createjs.Text(songInfo.artist.toUpperCase(),"12px orator_stdregular", "#D5C502");
         this.artistTxt.y = -70;
@@ -81,13 +81,17 @@ var DotInfo = (function(){
     }
 
     function tick(e){
-        this.titleTxt.x -= 1;
-        this.titleTxt2.x -= 1;
-        if(this.titleTxt.x < - (this.titleTxt.getBounds().width)){
-            this.titleTxt.x = this.titleTxt2.getBounds().x + this.titleTxt2.getBounds().width + 40;
+        this.titleTxt.x -= 0.6;
+        this.titleTxt2.x -= 0.6;
+
+        //console.log(this.titleTxt.x, this.titleTxt.getMeasuredWidth());
+
+
+        if(this.titleTxt.x < - (this.titleTxt.getMeasuredWidth())){
+            this.titleTxt.x = this.titleTxt2.x + this.titleTxt2.getMeasuredWidth() + 40;
         }
-        if(this.titleTxt2.x < - (this.titleTxt2.getBounds().width)){
-            this.titleTxt2.x = this.titleTxt.x + this.titleTxt.getBounds().width + 40;
+        if(this.titleTxt2.x < - (this.titleTxt2.getMeasuredWidth())){
+            this.titleTxt2.x = this.titleTxt.x + this.titleTxt.getMeasuredWidth() + 40;
         }
     }
 

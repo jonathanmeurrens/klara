@@ -31,7 +31,7 @@ var Progress = (function(){
         this.view.y = yPos;
 
         var radius = stage.canvas.width + 64;
-        var graphicBg = new createjs.Graphics().
+        /*var graphicBg = new createjs.Graphics().
             beginRadialGradientFill(
                 ["#ec008c","#b5006c"],
                 [0, 1],
@@ -41,8 +41,19 @@ var Progress = (function(){
                 stage.canvas.width/2,
                 stage.canvas.height/2,
                 radius/3)
-            .drawCircle(0, 0, radius);
-        this.shapeBg = new createjs.Shape(graphicBg);
+            .drawCircle(0, 0, radius);*/
+
+        this.cloud = new createjs.Bitmap(preload.getResult('cloud'));
+        this.cloud.regX = 486/2;
+        this.cloud.regY = 249/2;
+        //this.cloud.alpha = 0;
+        this.view.addChild(this.cloud);
+        //createjs.Tween.get(this.cloud).to({alpha:1}, 1000);
+
+        this.shapeBg = new createjs.Shape();
+        this.shapeBg.graphics.beginFill("#ec008c");
+        this.shapeBg.graphics.drawCircle(0,0,radius);
+        this.shapeBg.graphics.endFill();
         this.view.addChild(this.shapeBg);
         this.shapeBg.scaleX = this.shapeBg.scaleY = 0;
 

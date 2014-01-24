@@ -1,4 +1,5 @@
 /* globals gameData:true  */
+/* globals Slideshow:true  */
 
 var CampaignScreen = (function(){
 
@@ -7,11 +8,21 @@ var CampaignScreen = (function(){
     function CampaignScreen(){
         self = this;
         this.view = new createjs.Container();
-        var text = new createjs.Text("CAMPAIGN SCREEN","22px Arial", "#000000");
+        /*var text = new createjs.Text("CAMPAIGN SCREEN","22px Arial", "#000000");
         text.x = stage.canvas.width/2 - 120;
         text.y = stage.canvas.height/2 - 15;
-        this.view.addChild(text);
+        this.view.addChild(text);*/
+
+        this.slideshow = new Slideshow();
+        this.view.addChild(this.slideshow.view);
+        stage.addEventListener("NEXT_SLIDE", this.slideshow.nextSlideHandler);
     }
+
+    CampaignScreen.prototype.willBeRemoved = function(){
+        stage.removeEventListener("NEXT_SLIDE", self.slideshow.nextSlideHandler);
+        self.view.removeChild(self.slideshow);
+        self.slideshow = null;
+    };
 
     return CampaignScreen;
 

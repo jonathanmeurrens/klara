@@ -34,7 +34,7 @@ var Timeline = (function(){
 
         this.luggageIcon = new createjs.Bitmap(preload.getResult("luggage_icon"));
         this.view.addChild(this.luggageIcon);
-        this.luggageIcon.x = stage.canvas.width - 80;
+        this.luggageIcon.x = stage.canvas.width - 84;
         this.luggageIcon.y = -15;
         this.luggageIcon.alpha = 0;
 

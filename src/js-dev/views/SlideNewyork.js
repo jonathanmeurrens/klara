@@ -1,3 +1,5 @@
+/* globals Slideshow:true */
+
 var SlideNewyork = (function()
 {
 
@@ -26,21 +28,21 @@ var SlideNewyork = (function()
         this.circleE.y = Math.floor(window.innerHeight/2+78);
         this.view.addChild(this.circleE);
 
-        this.logo = new createjs.Bitmap("img/logo.png");
+        this.logo = new createjs.Bitmap(preload.getResult("logo"));
         this.logo.width = 239;
         this.logo.height = 249;
         this.logo.x = window.innerWidth/2-this.logo.width/2;
         this.logo.y = window.innerHeight/2-this.logo.height/2;
         this.view.addChild(this.logo);
 
-        this.airport = new createjs.Bitmap("img/airport.png");
+        this.airport = new createjs.Bitmap(preload.getResult("airport"));
         this.airport.x = Math.floor(window.innerWidth/2-90+17);
         this.airport.y = Math.floor(window.innerHeight/2-178+17);
         this.airport.scaleX = this.airport.scaleY = 0;
         this.airport.regX = this.airport.regY = 17;
         this.view.addChild(this.airport);
 
-        this.label = new createjs.Bitmap("img/newyork_label.png");
+        this.label = new createjs.Bitmap(preload.getResult("newyork_label"));
         this.label.x = Math.floor(window.innerWidth/2-72);
         this.label.y = Math.floor(window.innerHeight/2-189+26);
         this.label.regY = 26;
@@ -48,13 +50,13 @@ var SlideNewyork = (function()
         this.label.alpha = 0;
         this.view.addChild(this.label);
 
-        this.plane = new createjs.Bitmap("img/plane.png");
+        this.plane = new createjs.Bitmap(preload.getResult("plane"));
         this.plane.x = Math.floor(window.innerWidth/2-300);
         this.plane.y = Math.floor(window.innerHeight/2-202);
         this.plane.alpha = 0;
         this.view.addChild(this.plane);
 
-        this.image = new createjs.Bitmap("img/newyork_image.png");
+        this.image = new createjs.Bitmap(preload.getResult("newyork_image"));
         this.image.width = 239;
         this.image.height = 249;
         this.image.x = Math.floor(window.innerWidth/2+50);
@@ -62,13 +64,13 @@ var SlideNewyork = (function()
         this.image.alpha = 0;
         this.view.addChild(this.image);
 
-        this.map = new createjs.Bitmap("img/newyork_map.png");
+        this.map = new createjs.Bitmap(preload.getResult("newyork_map"));
         this.map.x = Math.floor(window.innerWidth/2-140);
         this.map.y = Math.floor(window.innerHeight/2-167);
         this.map.alpha = 0;
         this.view.addChild(this.map);
 
-        this.twitter = new createjs.Bitmap("img/twitter.png");
+        this.twitter = new createjs.Bitmap(preload.getResult("twitter"));
         this.twitter.x = Math.floor(window.innerWidth/2+154+11);
         this.twitter.y = Math.floor(window.innerHeight/2+71+11);
         this.twitter.scaleX = this.twitter.scaleY = 0.5;
@@ -76,7 +78,7 @@ var SlideNewyork = (function()
         this.twitter.alpha = 0;
         this.view.addChild(this.twitter);
 
-        this.facebook = new createjs.Bitmap("img/facebook.png");
+        this.facebook = new createjs.Bitmap(preload.getResult("facebook"));
         this.facebook.x = Math.floor(window.innerWidth/2+174+11);
         this.facebook.y = Math.floor(window.innerHeight/2+48+11);
         this.facebook.scaleX = this.facebook.scaleY = 0.5;
@@ -84,7 +86,7 @@ var SlideNewyork = (function()
         this.facebook.alpha = 0;
         this.view.addChild(this.facebook);
 
-        this.tip = new createjs.Bitmap("img/tip.png");
+        this.tip = new createjs.Bitmap(preload.getResult("tip"));
         this.tip.width = 279;
         this.tip.height = 54;
         this.tip.x = Math.floor(window.innerWidth/2+150);
@@ -120,7 +122,8 @@ var SlideNewyork = (function()
         createjs.Tween.get(this.image).to({x: Math.floor(window.innerWidth/2-this.image.width/2-100), alpha:0}, 2000, createjs.Ease.cubicIn);
         createjs.Tween.get(this.plane).to({x:Math.floor(window.innerWidth/2+100), alpha:0}, 2000, createjs.Ease.cubicIn).call(function(){
             self.view.removeAllChildren();
-            stage.dispatchEvent("NEXT_SLIDE");
+            bean.fire(self, Slideshow.NEXT_SLIDE);
+            //stage.dispatchEvent("NEXT_SLIDE");
         });
 
         createjs.Tween.get(this.circleE).wait(1050).to({x: Math.floor(window.innerWidth/2+185), y: Math.floor(window.innerHeight/2+79), alpha: 0}, 500, createjs.Ease.cubicIn);

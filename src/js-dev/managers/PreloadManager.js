@@ -31,17 +31,32 @@ var PreloadManager = (function(){
         showPreloader();
         self.isPreloadingApp = true;
         var manifest = [
+            {src:"assets/cloud.png", id:"cloud"},
             {src:"assets/klara_logo.png", id:"klara_logo"},
             {src:"assets/logo_background.png", id:"logo_background"},
             {src:"assets/worldmap3.png", id:"worldmap"},
-            {src:"assets/buttons/facebook.png"},
-            {src:"assets/buttons/twitter.png"},
+            {src:"assets/buttons/facebook.png", id:"twitter"},
+            {src:"assets/buttons/twitter.png", id:"facebook"},
             {src:"assets/buttons/play_pause.png"},
             {src:"assets/compass-indicator.png", id:"compass-indicator"},
             {src:"assets/compass-outer.png", id:"compass-outer"},
             {src:"assets/compass-inner.png", id:"compass-inner"},
             {src:"assets/title_app.png", id:"app_title"},
-            {src:"assets/luggage_icon.png", id:"luggage_icon"}
+            {src:"assets/luggage_icon.png", id:"luggage_icon"},
+
+            {src:"assets/slideshow/plane.png", id:"plane"},
+            {src:"assets/slideshow/airport.png", id:"airport"},
+            {src:"assets/slideshow/athene_image.png", id:"athene_image"},
+            {src:"assets/slideshow/athene_label.png", id:"athene_label"},
+            {src:"assets/slideshow/athene_map.png", id:"athene_map"},
+            {src:"assets/slideshow/logo.png", id:"logo"},
+            {src:"assets/slideshow/newyork_image.png", id:"newyork_image"},
+            {src:"assets/slideshow/newyork_label.png", id:"newyork_label"},
+            {src:"assets/slideshow/newyork_map.png", id:"newyork_map"},
+            {src:"assets/slideshow/tip.png", id:"tip"},
+            {src:"assets/slideshow/wenen_image.png", id:"wenen_image"},
+            {src:"assets/slideshow/wenen_label.png", id:"wenen_label"},
+            {src:"assets/slideshow/wenen_map.png", id:"wenen_map"}
         ];
         //createjs.Sound.alternateExtensions = ["mp3"];
         preload.loadManifest(manifest, true);

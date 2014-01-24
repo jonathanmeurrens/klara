@@ -8,6 +8,7 @@
 
 /* globals appModel:true */
 /* globals AppModel:true */
+/* globals CurrentProgramma:true */
 
 var TravelInfo = (function(){
 
@@ -18,6 +19,13 @@ var TravelInfo = (function(){
         self = this;
 
         this.view = new createjs.Container();
+
+        this.cloud = new createjs.Bitmap(preload.getResult('cloud'));
+        this.cloud.regX = 486/2;
+        this.cloud.regY = 249/2;
+        this.cloud.x = -130;
+        //this.cloud.alpha = 0;
+        this.view.addChild(this.cloud);
 
         this.background = new createjs.Shape();
         this.background.graphics.beginFill("#ffd600");
@@ -37,7 +45,16 @@ var TravelInfo = (function(){
         this.view.addChild(this.nextTitleTxt);
         this.nextTitleTxt.textAlign = "right";
 
+        /*this.nextDescriptionTxt = new createjs.Text("","12px orator_stdregular", "#000000");
+        this.nextDescriptionTxt.y = 45;
+        this.nextDescriptionTxt.x = 0;
+        this.view.addChild(this.nextDescriptionTxt);
+        this.nextDescriptionTxt.textAlign = "right";*/
+
         this.background.y = this.nextTitleTxt.y;
+
+        this.currentProgramma = new CurrentProgramma();
+        this.view.addChild(this.currentProgramma.view);
 
         this.view.y = -40;
         this.view.x = stage.canvas.width - 80;
@@ -54,7 +71,7 @@ var TravelInfo = (function(){
 
                 self.background.graphics.clear();
                 self.background.graphics.beginFill("#ffd600");
-                self.background.graphics.drawRect(-self.nextTitleTxt.getBounds().width,0,self.nextTitleTxt.getBounds().width + 8, 18);
+                self.background.graphics.drawRect(-self.nextTitleTxt.getMeasuredWidth(),0,self.nextTitleTxt.getMeasuredWidth() + 8, 18);
                 self.background.graphics.endFill();
             }
         });
