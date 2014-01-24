@@ -148,6 +148,7 @@ var AppModel = (function(){
                 self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false); // fetch next song data
             }else{
                 self.nextSong = null;
+                bean.fire(self, AppModel.NOW_AND_NEXT_LOADED);
             }
             self.setCurrentSongIndex(currentSongIndex);
         }

@@ -27,22 +27,25 @@ var TravelInfo = (function(){
         //this.cloud.alpha = 0;
         this.view.addChild(this.cloud);
 
+        this.travelInfoContainer = new createjs.Container();
+        this.view.addChild(this.travelInfoContainer);
+
         this.background = new createjs.Shape();
         this.background.graphics.beginFill("#ffd600");
         this.background.graphics.drawRect(0,0,0, 20);
         this.background.graphics.endFill();
-        this.view.addChild(this.background);
+        this.travelInfoContainer.addChild(this.background);
 
         this.nextDestinationTxt = new createjs.Text("","12px orator_stdregular", "#000000");
-        this.view.addChild(this.nextDestinationTxt);
-        this.nextDestinationTxt.x = 0;
+        this.travelInfoContainer.addChild(this.nextDestinationTxt);
+        this.nextDestinationTxt.x = 7;
         this.nextDestinationTxt.y = 0;
         this.nextDestinationTxt.textAlign = "right";
 
         this.nextTitleTxt = new createjs.Text("","12px orator_stdregular", "#000000");
         this.nextTitleTxt.y = 22;
         this.nextTitleTxt.x = 4;
-        this.view.addChild(this.nextTitleTxt);
+        this.travelInfoContainer.addChild(this.nextTitleTxt);
         this.nextTitleTxt.textAlign = "right";
 
         /*this.nextDescriptionTxt = new createjs.Text("","12px orator_stdregular", "#000000");
@@ -61,6 +64,10 @@ var TravelInfo = (function(){
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             if(appModel.nextSong != null){
+
+                createjs.Tween.get(self.travelInfoContainer).to({y: 0, alpha:1});
+                createjs.Tween.get(self.currentProgramma.view).to({y: 0, alpha:0});
+
                 self.nextDestinationTxt.text = "volgende bestemming: " + appModel.nextSong.location;
                 var title = appModel.nextSong.title + ", " + appModel.nextSong.artist;
                 if(title.length > 34){
@@ -73,6 +80,9 @@ var TravelInfo = (function(){
                 self.background.graphics.beginFill("#ffd600");
                 self.background.graphics.drawRect(-self.nextTitleTxt.getMeasuredWidth(),0,self.nextTitleTxt.getMeasuredWidth() + 8, 18);
                 self.background.graphics.endFill();
+            }else{
+                createjs.Tween.get(self.travelInfoContainer).to({y: 20, alpha:0});
+                createjs.Tween.get(self.currentProgramma.view).to({y: 20, alpha:1});
             }
         });
     }

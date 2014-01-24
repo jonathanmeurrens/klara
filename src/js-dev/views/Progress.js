@@ -115,7 +115,7 @@ var Progress = (function(){
 
         this.isOpen = false;
         this.view.mouseEnabled = true;
-        this.view.addEventListener("click", $.proxy( clickHandler, this ));
+        this.logo.addEventListener("click", $.proxy( clickHandler, this ));
 
         this.progressTimer = setInterval(function(){
             appModel.userModel.setProgress(appModel.userModel.progress += 1);

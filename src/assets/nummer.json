@@ -21,11 +21,11 @@
     "startDate": "2014-01-21T23:24:29.350Z",
     "endDate": "2014-01-21T23:28:28.350Z",
     "type": "SONG",
-    "onairType": "NEXT",
+    "onairType": "NOW",
     "properties" : [
 		{
     		"key" : "ARTISTNAME",
-    		"value"  : "Michael Jackson"
+    		"value"  : "Goldman"
 },		{
     		"key" : "TITLE",
     		"value"  : "Tous 3les autres"
@@ -38,7 +38,7 @@
     "startDate": "2014-01-21T23:24:29.350Z",
     "endDate": "2014-01-21T23:28:28.350Z",
     "type": "SONG",
-    "onairType": "NOW",
+    "onairType": "NEXT",
     "properties" : [
         {
             "key" : "ARTISTNAME",

@@ -64,13 +64,18 @@ var CampaignScreen = (function(){
         text.y = stage.canvas.height/2 - 15;
         this.view.addChild(text);*/
 
-        this.slideshow = new Slideshow();
-        this.view.addChild(this.slideshow.view);
-        stage.addEventListener("NEXT_SLIDE", this.slideshow.nextSlideHandler);
+        setTimeout(showSlideshow, 300);
+
+    }
+
+    function showSlideshow(){
+        self.slideshow = new Slideshow();
+        self.view.addChild(self.slideshow.view);
+        //stage.addEventListener("NEXT_SLIDE", this.slideshow.nextSlideHandler);
     }
 
     CampaignScreen.prototype.willBeRemoved = function(){
-        stage.removeEventListener("NEXT_SLIDE", self.slideshow.nextSlideHandler);
+        //stage.removeEventListener("NEXT_SLIDE", self.slideshow.nextSlideHandler);
         self.view.removeChild(self.slideshow);
         self.slideshow = null;
     };
@@ -127,6 +132,7 @@ var CurrentProgramma = (function(){
         //this.view.x = stage.canvas.width / 2;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
+            console.log("[CurrentProgramma] now and next loaded, is nextSong? =>",appModel.nextSong);
             if(appModel.nextSong == null){
                 // show programma info
                 self.view.alpha = 1;
@@ -285,11 +291,11 @@ var DotInfo = (function(){
         this.shadowShape.graphics.beginFill("#000000");
         this.shadowShape.graphics.lineTo(0,0);
         this.shadowShape.graphics.lineTo(60,-75);
-        this.shadowShape.graphics.lineTo(70,-75);
-        this.shadowShape.graphics.lineTo(70,-20);
+        this.shadowShape.graphics.lineTo(170,-75);
+        this.shadowShape.graphics.lineTo(170,-30);
         this.shadowShape.graphics.endFill();
         this.shadowShape.graphics.closePath();
-        this.shadowShape.alpha = 0.1;
+        this.shadowShape.alpha = 0.07;
         this.view.addChild(this.shadowShape);
         //this.shadowShape.scaleY = this.shadowShape.scaleX = 0.6;
 
@@ -788,7 +794,7 @@ var Progress = (function(){
 
         this.isOpen = false;
         this.view.mouseEnabled = true;
-        this.view.addEventListener("click", $.proxy( clickHandler, this ));
+        this.logo.addEventListener("click", $.proxy( clickHandler, this ));
 
         this.progressTimer = setInterval(function(){
             appModel.userModel.setProgress(appModel.userModel.progress += 1);
@@ -1602,22 +1608,25 @@ var TravelInfo = (function(){
         //this.cloud.alpha = 0;
         this.view.addChild(this.cloud);
 
+        this.travelInfoContainer = new createjs.Container();
+        this.view.addChild(this.travelInfoContainer);
+
         this.background = new createjs.Shape();
         this.background.graphics.beginFill("#ffd600");
         this.background.graphics.drawRect(0,0,0, 20);
         this.background.graphics.endFill();
-        this.view.addChild(this.background);
+        this.travelInfoContainer.addChild(this.background);
 
         this.nextDestinationTxt = new createjs.Text("","12px orator_stdregular", "#000000");
-        this.view.addChild(this.nextDestinationTxt);
-        this.nextDestinationTxt.x = 0;
+        this.travelInfoContainer.addChild(this.nextDestinationTxt);
+        this.nextDestinationTxt.x = 7;
         this.nextDestinationTxt.y = 0;
         this.nextDestinationTxt.textAlign = "right";
 
         this.nextTitleTxt = new createjs.Text("","12px orator_stdregular", "#000000");
         this.nextTitleTxt.y = 22;
         this.nextTitleTxt.x = 4;
-        this.view.addChild(this.nextTitleTxt);
+        this.travelInfoContainer.addChild(this.nextTitleTxt);
         this.nextTitleTxt.textAlign = "right";
 
         /*this.nextDescriptionTxt = new createjs.Text("","12px orator_stdregular", "#000000");
@@ -1636,6 +1645,10 @@ var TravelInfo = (function(){
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
             if(appModel.nextSong != null){
+
+                createjs.Tween.get(self.travelInfoContainer).to({y: 0, alpha:1});
+                createjs.Tween.get(self.currentProgramma.view).to({y: 0, alpha:0});
+
                 self.nextDestinationTxt.text = "volgende bestemming: " + appModel.nextSong.location;
                 var title = appModel.nextSong.title + ", " + appModel.nextSong.artist;
                 if(title.length > 34){
@@ -1648,6 +1661,9 @@ var TravelInfo = (function(){
                 self.background.graphics.beginFill("#ffd600");
                 self.background.graphics.drawRect(-self.nextTitleTxt.getMeasuredWidth(),0,self.nextTitleTxt.getMeasuredWidth() + 8, 18);
                 self.background.graphics.endFill();
+            }else{
+                createjs.Tween.get(self.travelInfoContainer).to({y: 20, alpha:0});
+                createjs.Tween.get(self.currentProgramma.view).to({y: 20, alpha:1});
             }
         });
     }
@@ -1961,6 +1977,7 @@ var AppModel = (function(){
                 self.fetchInfoForSongWithIndex(self.userModel.songs.length - 1, false); // fetch next song data
             }else{
                 self.nextSong = null;
+                bean.fire(self, AppModel.NOW_AND_NEXT_LOADED);
             }
             self.setCurrentSongIndex(currentSongIndex);
         }

@@ -46,6 +46,7 @@ var CurrentProgramma = (function(){
         //this.view.x = stage.canvas.width / 2;
 
         bean.on(appModel, AppModel.NOW_AND_NEXT_LOADED, function(e){
+            console.log("[CurrentProgramma] now and next loaded, is nextSong? =>",appModel.nextSong);
             if(appModel.nextSong == null){
                 // show programma info
                 self.view.alpha = 1;

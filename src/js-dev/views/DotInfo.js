@@ -19,11 +19,11 @@ var DotInfo = (function(){
         this.shadowShape.graphics.beginFill("#000000");
         this.shadowShape.graphics.lineTo(0,0);
         this.shadowShape.graphics.lineTo(60,-75);
-        this.shadowShape.graphics.lineTo(70,-75);
-        this.shadowShape.graphics.lineTo(70,-20);
+        this.shadowShape.graphics.lineTo(170,-75);
+        this.shadowShape.graphics.lineTo(170,-30);
         this.shadowShape.graphics.endFill();
         this.shadowShape.graphics.closePath();
-        this.shadowShape.alpha = 0.1;
+        this.shadowShape.alpha = 0.07;
         this.view.addChild(this.shadowShape);
         //this.shadowShape.scaleY = this.shadowShape.scaleX = 0.6;
 
